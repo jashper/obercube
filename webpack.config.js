@@ -1,9 +1,8 @@
-/* eslint import/no-extraneous-dependencies:0 */
 const webpack = require('webpack');
 
 module.exports = {
   entry: {
-    obercube: './src/client/app.jsx'
+    obercube: './src/client/index.jsx'
   },
 
   output: {
@@ -14,6 +13,14 @@ module.exports = {
 
   module: {
     loaders: [
+      {
+        test: /\.js/,
+        loader: 'babel',
+        include: `${__dirname}/src`,
+        query: {
+          presets: ['es2015', 'stage-0']
+        }
+      },
       {
         test: /\.jsx/,
         loader: 'babel',
