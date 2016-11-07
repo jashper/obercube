@@ -37,10 +37,8 @@ class ShapeRenderer extends React.Component {
 }
 
 // Only update on changes to state.shapes -> injects state.shapes as this.props.shapes
-const mapStateToProps = (state) => {
-  return {
-    shapes: state.shapes
-  };
-};
+const mapStateToProps = (state) => ({
+  shapes: state.shapes
+});
 
 export default connect(mapStateToProps)(ShapeRenderer);

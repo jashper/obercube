@@ -1,20 +1,16 @@
 import Actions from '../actions.js';
 
 export default {
-  createShape: (id, paths) => {
-    return {
-      type: Actions.CREATE_SHAPE,
-      id: id,
-      shape: {
-        paths: paths
-      }
-    };
-  },
+  createShape: (id, paths) => ({
+    type: Actions.CREATE_SHAPE,
+    id: id,
+    shape: {
+      paths: paths
+    }
+  }),
 
-  destroyShape: (id) => {
-    return {
-      type: Actions.DESTROY_SHAPE,
-      id: id
-    };
-  }
+  destroyShape: (id) => ({
+    type: Actions.DESTROY_SHAPE,
+    id: id
+  })
 };

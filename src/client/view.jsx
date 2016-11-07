@@ -1,8 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
 
+import InputController from './input-controller.jsx';
 import ShapeRenderer from './shape-renderer.jsx';
-import { destroyShape } from './actions/draw.js';
+import Mouse from './actions/mouse.js';
 
 class View extends React.Component {
   width: 500
@@ -29,6 +30,7 @@ class View extends React.Component {
         <canvas ref='canvas' id='canvas'
                 width={this.width} height={this.height}
                 onClick={e => this.onCanvasClick(e)} />
+        <InputController />
         <ShapeRenderer canvas={this.state.canvas} />
       </div>
     );
@@ -40,15 +42,11 @@ class View extends React.Component {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    // TODO: implement logic for seeing if a shape is clicked,
-    // and then calling this.props.destroyShape(id)
+    this.props.dispatch(Mouse.clickCanvas({
+      x: x,
+      y: y
+    }));
   }
 }
 
-const mapDispatchToProps = (dispatch) => ({
-  destroyShape: (id) => {
-    dispatch(destroyShape(id));
-  }
-});
-
-export default connect(mapDispatchToProps)(View);
+export default connect()(View);
