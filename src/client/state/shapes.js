@@ -2,7 +2,9 @@ import Immutable from 'immutable';
 
 import Actions from '../actions.js';
 
-function shapes(state = new Immutable.Map(), action) {
+const defaultState = new Immutable.Map();
+
+function shapes(state = defaultState, action) {
   switch (action.type) {
     case Actions.CREATE_SHAPE:
       return state.set(action.id, action.shape);

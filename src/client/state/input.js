@@ -2,7 +2,14 @@ import Immutable from 'immutable';
 
 import Actions from '../actions.js';
 
-function input(state = new Immutable.Map(), action) {
+const defaultState = new Immutable.Map({
+  clickPoint: {
+    x: null,
+    y: null
+  }
+});
+
+function input(state = defaultState, action) {
   switch (action.type) {
     case Actions.CLICK_CANVAS:
       return state.set('clickPoint', action.point);
