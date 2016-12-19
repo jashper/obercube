@@ -1,60 +1,60 @@
 const webpack = require('webpack');
 
 module.exports = {
-  entry: {
-    obercube: './src/client/index.jsx'
-  },
+	entry: {
+		obercube: './src/client/index.tsx'
+	},
 
-  output: {
-    path: `${__dirname}/dist/`,
-    publicPath: '/dist/',
-    filename: './[name].js'
-  },
+	output: {
+		path: `${__dirname}/dist/`,
+		publicPath: '/dist/',
+		filename: './[name].js'
+	},
 
-  module: {
-    loaders: [
-      {
-        test: /\.js/,
-        loader: 'babel',
-        include: `${__dirname}/src`,
-        query: {
-          presets: ['es2015', 'stage-0']
-        }
-      },
-      {
-        test: /\.jsx/,
-        loader: 'babel',
-        include: `${__dirname}/src`,
-        query: {
-          presets: ['es2015', 'stage-0', 'react'],
-          plugins: ['react-hot-loader/babel']
-        }
-      }
-    ]
-  },
+	resolve: {
+		extensions: ['', '.js', '.jsx', '.ts', '.tsx']
+	},
 
-  devServer: {
-    historyApiFallback: true,
-    noInfo: true
-  },
+	module: {
+		loaders: [
+			{
+				test: /\.jsx?$/,
+				loader: 'babel',
+				include: `${__dirname}/src`,
+			},
+			{
+				test: /\.tsx?$/,
+				loader: 'awesome-typescript-loader',
+				include: `${__dirname}/src`,
+				query: {
+					tsconfig: './tsconfig.json'
+				}
+			}
+		]
+	},
 
-  devtool: 'eval-source-map'
+	devServer: {
+		historyApiFallback: true,
+		noInfo: true
+	},
+
+	devtool: 'eval-source-map'
 };
 
 if (process.env.NODE_ENV === 'production') {
-  module.exports.devtool = 'source-map';
+	module.exports.devtool = 'source-map';
 
-  module.exports.plugins = (module.exports.plugins || []).concat([
-    new webpack.DefinePlugin({
-      'process.env': {
-        NODE_ENV: '"production"'
-      }
-    }),
+	module.exports.plugins = (module.exports.plugins || []).concat([
+		new webpack.DefinePlugin({
+			'process.env': {
+				NODE_ENV: '"production"'
+			}
+		}),
 
-    new webpack.optimize.UglifyJsPlugin({
-      compress: {
-        warnings: false
-      }
-    })
-  ]);
+		new webpack.optimize.UglifyJsPlugin({
+			compress: {
+				warnings: false
+			}
+		})
+	]);
 }
