@@ -10,8 +10,8 @@ import View from './view/view';
 const store = createStore(reducers, composeWithDevTools());
 
 ReactDOM.render(
-	<Provider store={store}>
-		<View />
-	</Provider>,
-	document.getElementById('root')
+    <Provider store={store}>
+        <View />
+    </Provider>,
+    document.getElementById('root')
 );

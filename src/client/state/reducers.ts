@@ -4,9 +4,9 @@ import { input, InputStateRecord } from './input';
 
 // All files in 'src/client/state/' must be included here
 export const reducers = combineReducers({
-	input
+    input
 });
 
 export interface StoreRecords {
-	input: InputStateRecord
+    input: InputStateRecord;
 }
