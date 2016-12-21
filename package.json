@@ -1,48 +1,48 @@
 {
-	"name": "obercube",
-	"description": "That game your mom likes",
-	"version": "0.1.0",
-	"author": "",
-	"scripts": {
-		"dev": "cross-env NODE_ENV=development webpack-dev-server --open --inline --hot",
-		"build": "cross-env NODE_ENV=production webpack --progress --hide-modules"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/jashper/obercube.git"
-	},
-	"bugs": {
-		"url": "https://github.com/jashper/obercube/issues"
-	},
-	"homepage": "https://github.com/jashper/obercube#readme",
-	"dependencies": {
-		"immutable": "^3.8.1",
-		"react": "^15.4.1",
-		"react-dom": "^15.4.1",
-		"react-redux": "^5.0.1",
-		"redux": "^3.6.0",
-		"redux-devtools-extension": "^1.0.0",
-		"typed-immutable-record": "^0.0.6"
-	},
-	"devDependencies": {
-		"@types/react": "^0.14.55",
-		"@types/react-dom": "^0.14.19",
-		"@types/react-redux": "^4.4.35",
-		"@types/redux": "^3.6.0",
-		"awesome-typescript-loader": "^3.0.0-beta.17",
-		"babel-core": "^6.21.0",
-		"babel-loader": "^6.2.10",
-		"babel-preset-es2015": "^6.18.0",
-		"babel-preset-react": "^6.16.0",
-		"babel-preset-stage-0": "^6.16.0",
-		"cross-env": "^3.1.3",
-		"css-loader": "^0.26.1",
-		"file-loader": "^0.9.0",
-		"react-hot-loader": "^3.0.0-beta.6",
-		"tslint": "^4.1.1",
-		"tslint-microsoft-contrib": "^4.0.0",
-		"typescript": "^2.1.4",
-		"webpack": "^1.14.0",
-		"webpack-dev-server": "^1.16.2"
-	}
+    "name": "obercube",
+    "description": "That game your mom likes",
+    "version": "0.1.0",
+    "author": "",
+    "scripts": {
+        "dev": "cross-env NODE_ENV=development webpack-dev-server --open --inline --hot",
+        "build": "cross-env NODE_ENV=production webpack --progress --hide-modules"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/jashper/obercube.git"
+    },
+    "bugs": {
+        "url": "https://github.com/jashper/obercube/issues"
+    },
+    "homepage": "https://github.com/jashper/obercube#readme",
+    "dependencies": {
+        "immutable": "^3.8.1",
+        "react": "^15.4.1",
+        "react-dom": "^15.4.1",
+        "react-redux": "^5.0.1",
+        "redux": "^3.6.0",
+        "redux-devtools-extension": "^1.0.0",
+        "typed-immutable-record": "^0.0.6"
+    },
+    "devDependencies": {
+        "@types/react": "^0.14.55",
+        "@types/react-dom": "^0.14.19",
+        "@types/react-redux": "^4.4.35",
+        "@types/redux": "^3.6.0",
+        "awesome-typescript-loader": "^3.0.0-beta.17",
+        "babel-core": "^6.21.0",
+        "babel-loader": "^6.2.10",
+        "babel-preset-es2015": "^6.18.0",
+        "babel-preset-react": "^6.16.0",
+        "babel-preset-stage-0": "^6.16.0",
+        "cross-env": "^3.1.3",
+        "css-loader": "^0.26.1",
+        "file-loader": "^0.9.0",
+        "react-hot-loader": "^3.0.0-beta.6",
+        "tslint": "^4.1.1",
+        "tslint-microsoft-contrib": "^4.0.0",
+        "typescript": "^2.1.4",
+        "webpack": "^1.14.0",
+        "webpack-dev-server": "^1.16.2"
+    }
 }
