@@ -1,9 +1,4 @@
-import { Action } from './action';
-
-export class Coordinates {
-    constructor(readonly x: number,
-                readonly y: number) {}
-}
+import { Action, Coordinates } from './action';
 
 export const MouseActionType = {
     SINGLE_CLICK: 'SINGLE_CLICK'

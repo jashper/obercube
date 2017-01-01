@@ -1,7 +1,7 @@
 import { TypedRecord, makeTypedFactory } from 'typed-immutable-record';
 
-import { Action } from '../actions/action';
-import { MouseActionType, Coordinates } from '../actions/mouse';
+import { Action, Coordinates } from '../actions/action';
+import { MouseActionType } from '../actions/mouse';
 
 interface InputState {
     clickPoint: Coordinates;
@@ -9,13 +9,13 @@ interface InputState {
 export interface InputStateRecord extends TypedRecord<InputStateRecord>, InputState {}
 
 const defaultState = makeTypedFactory<InputState, InputStateRecord>({
-    clickPoint: new Coordinates(0, 0)
+    clickPoint: { x: 0, y: 0 }
 });
 
-export function input(state: InputStateRecord = defaultState(), action: Action<Coordinates>) {
+export function input(state: InputStateRecord = defaultState(), action: Action<any>) {
     switch (action.type) {
         case MouseActionType.SINGLE_CLICK:
-            return state.merge({clickPoint: action.payload});
+            return state.merge({ clickPoint: action.payload });
         default:
             return state;
     }

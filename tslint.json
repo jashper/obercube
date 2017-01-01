@@ -19,6 +19,9 @@
     "no-default-export": false,
     "no-any": false,
     "import-name": false,
-    "no-unused-variable": [true, "react"]
+    "no-unused-variable": [true, "react"],
+    "no-increment-decrement": false,
+    "prefer-type-cast": false,
+    "no-suspicious-comment": false
   }
 }

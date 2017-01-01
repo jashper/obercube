@@ -1,0 +1,37 @@
+import { Map } from 'immutable';
+import { TypedRecord, makeTypedFactory } from 'typed-immutable-record';
+
+import { Action, DrawableState, Outpost } from '../actions/action';
+import { SpawnActionType } from '../actions/spawn';
+
+export interface OutpostState {
+    modifiedId: number | null;
+    idMap: Map<number, Outpost>;
+}
+export interface OutpostStateRecord extends TypedRecord<OutpostStateRecord>, OutpostState {}
+
+const defaultState = makeTypedFactory<OutpostState, OutpostStateRecord>({
+    modifiedId: null,
+    idMap: Map<number, Outpost>()
+});
+
+let id = 1;
+
+export function outpost(state: OutpostStateRecord = defaultState(), action: Action<any>) {
+    switch (action.type) {
+        case SpawnActionType.SPAWN_OUTPOST:
+            const outpost = {
+                id: id++,
+                x: action.payload.x,
+                y: action.payload.y,
+                state: DrawableState.SPAWNED
+            };
+
+            return state.merge({
+                modifiedId: state.modifiedId === outpost.id ? null : outpost.id,
+                idMap: state.idMap.set(outpost.id, outpost)
+            });
+        default:
+            return state;
+    }
+}
