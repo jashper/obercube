@@ -20,10 +20,13 @@ export interface ElementVisibility {
 
 export class ViewElementGrid<T extends ViewElement> {
     private readonly binSize: number;
+
     private mapWidth: number;
     private mapHeight: number;
     private viewWidth: number;
     private viewHeight: number;
+    private x: number;
+    private y: number;
     private binsPerRow: number;
 
     private elements = new Map<number, T>();
@@ -38,15 +41,24 @@ export class ViewElementGrid<T extends ViewElement> {
         return this.elements.get(id);
     }
 
-    setMapDimensions(mapWidth: number, mapHeight: number,
-                     viewWidth: number, viewHeight: number,
-                     x: number, y: number) {
+    init(mapWidth: number, mapHeight: number,
+         viewWidth: number, viewHeight: number,
+         x: number, y: number
+    ) {
         this.mapWidth = mapWidth;
         this.mapHeight = mapHeight;
         this.binsPerRow = this.mapWidth / this.binSize;
 
+        this.viewWidth = viewWidth;
+        this.viewHeight = viewHeight;
+        this.x = x;
+        this.y = y;
+
         this.resetBins();
-        this.changeView(x, y, viewWidth, viewHeight);
+
+        // set the initially visible bins
+        const visibleBins = this.getContainingBins(x, y, viewWidth, viewHeight);
+        visibleBins.forEach((bin) => this.isVisible.add(bin));
     }
 
     private resetBins() {
@@ -66,7 +78,7 @@ export class ViewElementGrid<T extends ViewElement> {
         let isVisible = false;
         this.elements.set(e.id, e);
 
-        const bins = this.getContainingBins(e);
+        const bins = this.getDrawableBins(e);
         bins.forEach((bin) => {
             (this.bins.get(bin) as Set<number>).add(e.id);
 
@@ -83,7 +95,7 @@ export class ViewElementGrid<T extends ViewElement> {
         let isVisible = false;
         this.elements.delete(e.id);
 
-        const bins = this.getContainingBins(e);
+        const bins = this.getDrawableBins(e);
         bins.forEach((bin) => {
             (this.bins.get(bin) as Set<number>).delete(e.id);
 
@@ -96,21 +108,7 @@ export class ViewElementGrid<T extends ViewElement> {
         return isVisible ? { excluded: new Set([e.id]) } : {};
     }
 
-    private changeView(x: number, y: number, width: number, height: number) {
-        this.viewWidth = width;
-        this.viewHeight = height;
-
-        const bins = new Set<number>();
-        for (let dx = x; dx < width; dx += this.binSize) {
-            for (let dy = y; dy < height; dy += this.binSize) {
-                bins.add(this.coordinatesToBin(dx, dy));
-            }
-        }
-
-        bins.forEach((bin) => this.isVisible.add(bin));
-    }
-
-    private getContainingBins(e: T) {
+    private getDrawableBins(e: T) {
         const bounds = e.stage.getBounds();
         const { width, height } = bounds;
 
@@ -122,9 +120,20 @@ export class ViewElementGrid<T extends ViewElement> {
         const xMax = x + width;
         const yMax = y + height;
 
+        // drawables can have negative coordinates if the initial offset/center
+        // of it's stage is at (0,0)
+        x = Math.max(x, 0);
+        y = Math.max(y, 0);
+
+        return this.getContainingBins(x, y, xMax, yMax);
+    }
+
+    // Gets the bins that a rectangular selection with top-left corner (x, y) occupies
+    // (note: all args must be > 0)
+    private getContainingBins(x: number, y: number, width: number, height: number) {
         const bins = new Set<number>();
-        for (let dx = Math.max(bounds.x, 0); dx < xMax; dx += this.binSize) {
-            for (let dy = Math.max(bounds.y, 0); dy < yMax; dy += this.binSize) {
+        for (let dx = x; dx < width; dx += this.binSize) {
+            for (let dy = y; dy < height; dy += this.binSize) {
                 bins.add(this.coordinatesToBin(dx, dy));
             }
         }

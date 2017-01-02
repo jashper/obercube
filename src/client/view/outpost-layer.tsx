@@ -38,13 +38,7 @@ class OutpostLayer extends React.Component<Props, {}> {
         const { width: viewWidth, height: viewHeight } = nextProps.viewport;
         const { x, y } = nextProps.viewport;
         if (mapWidth !== this.props.map.width || mapHeight !== this.props.map.height) {
-            this.grid.setMapDimensions(mapWidth, mapHeight, viewWidth, viewHeight, x, y);
-            this.updateVisiblity({});
-        }
-
-        if (viewWidth !== this.props.viewport.width || viewHeight !== this.props.viewport.height) {
-            // TODO: resize the grid
-            this.updateVisiblity({});
+            this.grid.init(mapWidth, mapHeight, viewWidth, viewHeight, x, y);
         }
 
         const { scale } = nextProps.viewport;
@@ -52,6 +46,10 @@ class OutpostLayer extends React.Component<Props, {}> {
             // TODO: scale the grid
             this.updateVisiblity({});
         } else {
+            if (viewWidth !== this.props.viewport.width || viewHeight !== this.props.viewport.height) {
+                // TODO: resize the grid
+                this.updateVisiblity({});
+            }
             if (x !== this.props.viewport.x || y !== this.props.viewport.y) {
                 // TODO: pan the grid
                 this.updateVisiblity({});
@@ -154,7 +152,7 @@ class OutpostElement extends ViewElement {
             });
         }
 
-        this.stage.scale.set(0.15, 0.15);
+        this.stage.scale.set(0.10, 0.10);
     }
 
     animate() {
