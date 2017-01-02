@@ -8,21 +8,25 @@ import 'rxjs/add/operator/debounceTime';
 
 import { StoreRecords } from '../state/reducers';
 import { Dispatch, Dimensions } from '../actions/action';
+import { MapStateRecord } from '../state/map';
 import { ViewportStateRecord } from '../state/viewport';
 import { WindowAction } from '../actions/window';
 import { MatchAction, MatchInfo } from '../actions/match';
+import { SpawnAction, SpawnInfo } from '../actions/spawn';
 
 import Constants from '../constants';
 import InputController from '../input-controller';
 import OutpostLayer from './outpost-layer';
 
 interface StateProps {
+    map: MapStateRecord;
     viewport: ViewportStateRecord;
 }
 
 interface DispatchProps {
     windowResize(dimensions: Dimensions): void;
     newMatch(info: MatchInfo): void;
+    spawnOutpost(info: SpawnInfo): void;
 }
 
 interface Props extends StateProps, DispatchProps {}
@@ -75,6 +79,51 @@ class View extends React.Component<Props, State> {
         this.animate();
     }
 
+    // TODO: remove this
+    componentDidUpdate(prevProps: Props, prevState: {}) {
+        const min = 0;
+        const max = 8;
+
+        // wait for the map to load
+        if (this.props.map.width !== prevProps.map.width) {
+            for (let x = 100; x < 2000; x += 250) {
+                for (let y = 100; y < 2000; y += 250) {
+                    let color = 0;
+                    switch (Math.ceil(Math.random() * (max - min) + min)) {
+                        case 1:
+                            color = Constants.COLORS.LAVENDER;
+                            break;
+                        case 2:
+                            color = Constants.COLORS.LIGHT_BLUE;
+                            break;
+                        case 3:
+                            color = Constants.COLORS.LIME_GREEN;
+                            break;
+                        case 4:
+                            color = Constants.COLORS.ORANGE;
+                            break;
+                        case 5:
+                            color = Constants.COLORS.RADICAL_RED;
+                            break;
+                        case 6:
+                            color = Constants.COLORS.SEAFOAM_GREEN;
+                            break;
+                        case 7:
+                            color = Constants.COLORS.TAN;
+                            break;
+                        case 8:
+                            color = Constants.COLORS.WHITE;
+                            break;
+                        default:
+                            break;
+                    }
+
+                    this.props.spawnOutpost({ x, y, color });
+                }
+            }
+        }
+    }
+
     componentWillReceiveProps(nextProps: Props) {
         const { width, height } = nextProps.viewport;
         if (width !== this.props.viewport.width || height !== this.props.viewport.height) {
@@ -125,6 +174,7 @@ class View extends React.Component<Props, State> {
 
 function mapStateToProps(state: StoreRecords) {
     return {
+        map: state.map,
         viewport: state.viewport
     };
 }
@@ -132,7 +182,8 @@ function mapStateToProps(state: StoreRecords) {
 function mapDispatchToProps(dispatch: Dispatch) {
     return {
         windowResize: bindActionCreators(WindowAction.resize, dispatch),
-        newMatch: bindActionCreators(MatchAction.new, dispatch)
+        newMatch: bindActionCreators(MatchAction.new, dispatch),
+        spawnOutpost: bindActionCreators(SpawnAction.outpost, dispatch)
     };
 }
 

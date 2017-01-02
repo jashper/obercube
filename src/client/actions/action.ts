@@ -24,6 +24,7 @@ export interface Drawable {
     x: number;
     y: number;
     state: DrawableState;
+    color: number;
 }
 
 export interface Outpost extends Drawable {}
