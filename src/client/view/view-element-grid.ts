@@ -2,23 +2,18 @@ import * as PIXI from 'pixi.js';
 
 import { Drawable } from '../actions/action';
 
-export class ViewElement {
-    readonly id: number;
-    readonly drawable: Drawable;
-    readonly stage = new PIXI.Container();
-
-    constructor(drawable: Drawable) {
-        this.id = drawable.id;
-        this.drawable = drawable;
-    }
-}
-
 export interface ElementVisibility {
     excluded?: Set<number>;
     included?: Set<number>;
 }
 
-export class ViewElementGrid<T extends ViewElement> {
+export interface ViewElement {
+    readonly drawable: Drawable;
+    readonly stage: PIXI.Container;
+    readonly animate: () => void;
+}
+
+export class ViewElementGrid {
     private readonly binSize: number;
 
     private mapWidth: number;
@@ -29,16 +24,11 @@ export class ViewElementGrid<T extends ViewElement> {
     private y: number;
     private binsPerRow: number;
 
-    private elements = new Map<number, T>();
     private bins = new Map<number, Set<number>>();
-    private isVisible = new Set<number>(); // bins that are visible
+    private visibleBins = new Set<number>();
 
     constructor(binSize: number) {
         this.binSize = binSize;
-    }
-
-    getElement(id: number) {
-        return this.elements.get(id);
     }
 
     init(mapWidth: number, mapHeight: number,
@@ -58,57 +48,56 @@ export class ViewElementGrid<T extends ViewElement> {
 
         // set the initially visible bins
         const visibleBins = this.getContainingBins(x, y, viewWidth, viewHeight);
-        visibleBins.forEach((bin) => this.isVisible.add(bin));
+        visibleBins.forEach((bin) => this.visibleBins.add(bin));
     }
 
     private resetBins() {
         const area = this.mapWidth * this.mapHeight;
         const binCount = area / (this.binSize * this.binSize);
 
-        this.elements.clear();
         this.bins.clear();
-        this.isVisible.clear();
+        this.visibleBins.clear();
 
         for (let i = 0; i < binCount; ++i) {
             this.bins.set(i, new Set<number>());
         }
     }
 
-    insert(e: T): ElementVisibility {
+    insert(e: ViewElement): ElementVisibility {
         let isVisible = false;
-        this.elements.set(e.id, e);
+        const id = e.drawable.id;
 
         const bins = this.getDrawableBins(e);
         bins.forEach((bin) => {
-            (this.bins.get(bin) as Set<number>).add(e.id);
+            (this.bins.get(bin) as Set<number>).add(id);
 
             // check if this bin is visible
-            if (!isVisible && this.isVisible.has(bin)) {
+            if (!isVisible && this.visibleBins.has(bin)) {
                 isVisible = true;
             }
         });
 
-        return isVisible ? { included: new Set([e.id]) } : {};
+        return isVisible ? { included: new Set([id]) } : {};
     }
 
-    remove(e: T): ElementVisibility {
+    remove(e: ViewElement): ElementVisibility {
         let isVisible = false;
-        this.elements.delete(e.id);
+        const id = e.drawable.id;
 
         const bins = this.getDrawableBins(e);
         bins.forEach((bin) => {
-            (this.bins.get(bin) as Set<number>).delete(e.id);
+            (this.bins.get(bin) as Set<number>).delete(id);
 
             // check if this bin is visible
-            if (!isVisible && this.isVisible.has(bin)) {
+            if (!isVisible && this.visibleBins.has(bin)) {
                 isVisible = true;
             }
         });
 
-        return isVisible ? { excluded: new Set([e.id]) } : {};
+        return isVisible ? { excluded: new Set([id]) } : {};
     }
 
-    private getDrawableBins(e: T) {
+    private getDrawableBins(e: ViewElement) {
         const bounds = e.stage.getBounds();
         const { width, height } = bounds;
 

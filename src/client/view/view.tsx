@@ -16,7 +16,6 @@ import { SpawnAction, SpawnInfo } from '../actions/spawn';
 
 import Constants from '../constants';
 import InputController from '../input-controller';
-import OutpostLayer from './outpost-layer';
 
 interface StateProps {
     map: MapStateRecord;
@@ -25,17 +24,15 @@ interface StateProps {
 
 interface DispatchProps {
     windowResize(dimensions: Dimensions): void;
+    startAnimation(stage: PIXI.Container): void;
+    render(): void;
     newMatch(info: MatchInfo): void;
     spawnOutpost(info: SpawnInfo): void;
 }
 
 interface Props extends StateProps, DispatchProps {}
 
-interface State {
-    tick: number;
-}
-
-class View extends React.Component<Props, State> {
+class View extends React.Component<Props, {}> {
     private minWidth = 640;
     private minHeight = 480;
 
@@ -45,14 +42,6 @@ class View extends React.Component<Props, State> {
     refs: {
         canvas: HTMLCanvasElement;
     };
-
-    constructor(props: Props) {
-        super(props);
-
-        this.state = {
-            tick: 0
-        };
-    }
 
     componentDidMount() {
         // create the stage to be rendered
@@ -68,12 +57,14 @@ class View extends React.Component<Props, State> {
             resolution: window.devicePixelRatio
         });
 
+        // TODO: remove this
+        this.props.newMatch({mapWidth: 2000, mapHeight: 2000 });
+
         // setup an observable to listen for window resizes
         this.props.windowResize(dimensions);
         this.onWindowResize();
 
-        // TODO: remove this
-        this.props.newMatch({mapWidth: 2000, mapHeight: 2000 });
+        this.props.startAnimation(this.stage);
 
         // start the main render loop
         this.animate();
@@ -86,8 +77,8 @@ class View extends React.Component<Props, State> {
 
         // wait for the map to load
         if (this.props.map.width !== prevProps.map.width) {
-            for (let x = 100; x < 2000; x += 250) {
-                for (let y = 100; y < 2000; y += 250) {
+            for (let x = 50; x < 2000; x += 100) {
+                for (let y = 50; y < 2000; y += 100) {
                     let color = 0;
                     switch (Math.ceil(Math.random() * (max - min) + min)) {
                         case 1:
@@ -142,7 +133,6 @@ class View extends React.Component<Props, State> {
             <div>
                 <InputController />
                 <canvas ref='canvas' style={{position: 'absolute', display: 'block'}} />
-                <OutpostLayer tick={this.state.tick} stage={this.stage}/>
             </div>
         );
     }
@@ -166,7 +156,7 @@ class View extends React.Component<Props, State> {
     }
 
     private animate() {
-        this.setState({ tick: this.state.tick + 1 });
+        this.props.render();
         this.renderer.render(this.stage);
         requestAnimationFrame(this.animate.bind(this));
     }
@@ -182,6 +172,8 @@ function mapStateToProps(state: StoreRecords) {
 function mapDispatchToProps(dispatch: Dispatch) {
     return {
         windowResize: bindActionCreators(WindowAction.resize, dispatch),
+        startAnimation: bindActionCreators(WindowAction.startAnimation, dispatch),
+        render: bindActionCreators(WindowAction.render, dispatch),
         newMatch: bindActionCreators(MatchAction.new, dispatch),
         spawnOutpost: bindActionCreators(SpawnAction.outpost, dispatch)
     };
