@@ -9,5 +9,8 @@ export default {
         LIME_GREEN: 0xA6E22E,
         ORANGE: 0xFD971F,
         SEAFOAM_GREEN: 0x08FDCC
-    }
+    },
+    ZOOM_FACTOR: 1.25,
+    MIN_SCALE: 0.5,
+    MAX_SCALE: 7
 };

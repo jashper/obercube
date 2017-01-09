@@ -56,7 +56,7 @@ export class OutpostElement implements ViewElement {
 
     animate() {
         this.innerCircles.forEach((c) => {
-            c.theta += 4;
+            c.theta += 3;
             c.circle.x = 110 * Math.cos(c.theta * (Math.PI / 180));
             c.circle.y = 110 * Math.sin(c.theta * (Math.PI / 180));
         });

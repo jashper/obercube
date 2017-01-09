@@ -1,3 +1,5 @@
+import * as PIXI from 'pixi.js';
+
 export interface Action<P> {
     type: string;
     payload: P;
@@ -15,16 +17,16 @@ export interface Dimensions {
     height: number;
 }
 
-export enum DrawableState {
-    SPAWNED = 0
-}
-
 export interface Drawable {
     id: number;
     x: number;
     y: number;
-    state: DrawableState;
     color: number;
 }
 
 export interface Outpost extends Drawable {}
+
+export interface RendererInfo {
+    stage: PIXI.Container;
+    renderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer;
+}

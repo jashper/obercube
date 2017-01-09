@@ -10,6 +10,7 @@ interface StateProps {}
 
 interface DispatchProps {
     mouseClick(point: Coordinates): void;
+    mouseWheel(ev: WheelEvent): void;
 }
 
 interface Props extends StateProps, DispatchProps {}
@@ -17,6 +18,7 @@ interface Props extends StateProps, DispatchProps {}
 class InputController extends React.Component<Props, {}> {
     componentDidMount() {
         window.onclick = this.onClick.bind(this);
+        window.onwheel = this.onWheel.bind(this);
     }
 
     render() {
@@ -31,6 +33,11 @@ class InputController extends React.Component<Props, {}> {
 
         this.props.mouseClick({ x, y });
     }
+
+    onWheel(ev: WheelEvent) {
+        ev.preventDefault();
+        this.props.mouseWheel(ev);
+    }
 }
 
 function mapStateToProps(state: StoreRecords) {
@@ -39,7 +46,8 @@ function mapStateToProps(state: StoreRecords) {
 
 function mapDispatchToProps(dispatch: Dispatch) {
     return {
-        mouseClick: bindActionCreators(MouseAction.click, dispatch)
+        mouseClick: bindActionCreators(MouseAction.click, dispatch),
+        mouseWheel: bindActionCreators(MouseAction.wheel, dispatch)
     };
 }
 

@@ -7,7 +7,7 @@ import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/operator/debounceTime';
 
 import { StoreRecords } from '../state/reducers';
-import { Dispatch, Dimensions } from '../actions/action';
+import { Dispatch, Dimensions, RendererInfo} from '../actions/action';
 import { MapStateRecord } from '../state/map';
 import { ViewportStateRecord } from '../state/viewport';
 import { WindowAction } from '../actions/window';
@@ -24,8 +24,7 @@ interface StateProps {
 
 interface DispatchProps {
     windowResize(dimensions: Dimensions): void;
-    startAnimation(stage: PIXI.Container): void;
-    render(): void;
+    startAnimation(info: RendererInfo): void;
     newMatch(info: MatchInfo): void;
     spawnOutpost(info: SpawnInfo): void;
 }
@@ -58,16 +57,14 @@ class View extends React.Component<Props, {}> {
         });
 
         // TODO: remove this
-        this.props.newMatch({mapWidth: 2000, mapHeight: 2000 });
+        this.props.newMatch({mapWidth: 5000, mapHeight: 5000 });
+
+        // start the main render loop
+        this.props.startAnimation({stage: this.stage, renderer: this.renderer});
 
         // setup an observable to listen for window resizes
         this.props.windowResize(dimensions);
         this.onWindowResize();
-
-        this.props.startAnimation(this.stage);
-
-        // start the main render loop
-        this.animate();
     }
 
     // TODO: remove this
@@ -76,9 +73,14 @@ class View extends React.Component<Props, {}> {
         const max = 8;
 
         // wait for the map to load
+        let canSpawn = true;
         if (this.props.map.width !== prevProps.map.width) {
-            for (let x = 50; x < 2000; x += 100) {
-                for (let y = 50; y < 2000; y += 100) {
+            for (let x = 50; x < 5000; x += 120) {
+                for (let y = 50; y < 5000; y += 120) {
+                    // if (Math.random() < 0.5) {
+                    //     continue;
+                    // }
+
                     let color = 0;
                     switch (Math.ceil(Math.random() * (max - min) + min)) {
                         case 1:
@@ -110,6 +112,7 @@ class View extends React.Component<Props, {}> {
                     }
 
                     this.props.spawnOutpost({ x, y, color });
+                    canSpawn = false;
                 }
             }
         }
@@ -119,12 +122,6 @@ class View extends React.Component<Props, {}> {
         const { width, height } = nextProps.viewport;
         if (width !== this.props.viewport.width || height !== this.props.viewport.height) {
             this.renderer.resize(width, height);
-            return;
-        }
-
-        const { scale } = nextProps.viewport;
-        if (scale !== this.props.viewport.scale) {
-            this.stage.scale.set(scale, scale);
         }
     }
 
@@ -154,12 +151,6 @@ class View extends React.Component<Props, {}> {
                 }
             });
     }
-
-    private animate() {
-        this.props.render();
-        this.renderer.render(this.stage);
-        requestAnimationFrame(this.animate.bind(this));
-    }
 }
 
 function mapStateToProps(state: StoreRecords) {
@@ -173,7 +164,6 @@ function mapDispatchToProps(dispatch: Dispatch) {
     return {
         windowResize: bindActionCreators(WindowAction.resize, dispatch),
         startAnimation: bindActionCreators(WindowAction.startAnimation, dispatch),
-        render: bindActionCreators(WindowAction.render, dispatch),
         newMatch: bindActionCreators(MatchAction.new, dispatch),
         spawnOutpost: bindActionCreators(SpawnAction.outpost, dispatch)
     };

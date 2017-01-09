@@ -1,12 +1,10 @@
 import * as PIXI from 'pixi.js';
 
-import { Action, Dimensions } from './action';
+import { Action, Dimensions, RendererInfo } from './action';
 
 export const WindowActionType = {
     WINDOW_RESIZE: 'WINDOW_RESIZE',
-    WINDOW_RESCALE: 'WINDOW_RESCALE',
-    WINDOW_START_ANIMATION: 'WINDOW_START_ANIMATION',
-    WINDOW_RENDER: 'WINDOW_RENDER'
+    WINDOW_START_ANIMATION: 'WINDOW_START_ANIMATION'
 };
 
 export const WindowAction = {
@@ -17,24 +15,10 @@ export const WindowAction = {
         };
     },
 
-    rescale: (scale: number): Action<number> => {
-        return {
-            type: WindowActionType.WINDOW_RESCALE,
-            payload: scale
-        };
-    },
-
-    startAnimation: (stage: PIXI.Container): Action<PIXI.Container> => {
+    startAnimation: (info: RendererInfo): Action<RendererInfo> => {
         return {
             type: WindowActionType.WINDOW_START_ANIMATION,
-            payload: stage
-        };
-    },
-
-    render: (): Action<null> => {
-        return {
-            type: WindowActionType.WINDOW_RENDER,
-            payload: null
+            payload: info
         };
     }
 };
