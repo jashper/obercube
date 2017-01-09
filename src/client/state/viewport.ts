@@ -41,9 +41,6 @@ export function viewport(state: ViewportStateRecord = defaultState(), action: Ac
             return state;
 
         case WindowActionType.WINDOW_RESIZE:
-            // uncenterScaledMap(state.width, state.height, state.scale);
-            // recenterScaledMap(action.payload.width, action.payload.height, state.scale);
-
             const { width, height } = action.payload;
             grid.resize(width / state.scale, height / state.scale);
 
@@ -120,30 +117,6 @@ export function viewport(state: ViewportStateRecord = defaultState(), action: Ac
 
 function animate() {
     grid.activeElements.forEach((e) => e.animate());
-    console.log(grid.activeElements.length);
     renderer.render(grid.stage);
     requestAnimationFrame(animate);
 }
-
-// function recenterScaledMap(width: number, height: number, scale: number) {
-//     // keep the map centered (i.e. check to see if the scaled dimensions exceed the map)
-//     const widthDelta = width - scale * mapWidth;
-//     const heightDelta = height - scale * mapHeight;
-//     if (widthDelta > 0) {
-//         stage.x += widthDelta / 2;
-//     }
-//     if (heightDelta > 0) {
-//         stage.y += heightDelta / 2;
-//     }
-// }
-
-// function uncenterScaledMap(width: number, height: number, scale: number) {
-//     const widthDelta = width - scale * mapWidth;
-//     const heightDelta = height - scale * mapHeight;
-//     if (widthDelta > 0) {
-//         stage.x -= widthDelta / 2;
-//     }
-//     if (heightDelta > 0) {
-//         stage.y -= heightDelta / 2;
-//     }
-// }
