@@ -9,17 +9,15 @@ import 'rxjs/add/operator/debounceTime';
 import { StoreRecords } from '../state/reducers';
 import { Dispatch, Dimensions, RendererInfo} from '../actions/action';
 import { MapStateRecord } from '../state/map';
-import { ViewportStateRecord } from '../state/viewport';
 import { WindowAction } from '../actions/window';
 import { MatchAction, MatchInfo } from '../actions/match';
 import { SpawnAction, SpawnInfo } from '../actions/spawn';
 
 import Constants from '../constants';
-import InputController from '../input-controller';
+import MouseController from '../mouse-controller';
 
 interface StateProps {
     map: MapStateRecord;
-    viewport: ViewportStateRecord;
 }
 
 interface DispatchProps {
@@ -75,11 +73,11 @@ class View extends React.Component<Props, {}> {
         // wait for the map to load
         let canSpawn = true;
         if (this.props.map.width !== prevProps.map.width) {
-            for (let x = 50; x < 5000; x += 120) {
-                for (let y = 50; y < 5000; y += 120) {
-                    // if (Math.random() < 0.5) {
-                    //     continue;
-                    // }
+            for (let x = 100; x < 5000; x += 240) {
+                for (let y = 100; y < 5000; y += 240) {
+                    if (Math.random() > 0.5) {
+                        continue;
+                    }
 
                     let color = 0;
                     switch (Math.ceil(Math.random() * (max - min) + min)) {
@@ -118,18 +116,11 @@ class View extends React.Component<Props, {}> {
         }
     }
 
-    componentWillReceiveProps(nextProps: Props) {
-        const { width, height } = nextProps.viewport;
-        if (width !== this.props.viewport.width || height !== this.props.viewport.height) {
-            this.renderer.resize(width, height);
-        }
-    }
-
     render() {
         return (
             <div>
-                <InputController />
-                <canvas ref='canvas' style={{position: 'absolute', display: 'block'}} />
+                <MouseController />
+                <canvas ref='canvas' style={{ position: 'absolute', display: 'block' }} />
             </div>
         );
     }
@@ -141,6 +132,7 @@ class View extends React.Component<Props, {}> {
         };
     }
 
+    // TODO: intercept browser zooms, and trigger a MOUSE_WHEEL event instead
     private onWindowResize() {
         Observable.fromEvent(window, 'resize')
             .debounceTime(75)
@@ -148,6 +140,7 @@ class View extends React.Component<Props, {}> {
                 next: () => {
                     const dimensions = this.getWindowDimensions();
                     this.props.windowResize(dimensions);
+                    this.renderer.resize(dimensions.width, dimensions.height);
                 }
             });
     }
@@ -155,8 +148,7 @@ class View extends React.Component<Props, {}> {
 
 function mapStateToProps(state: StoreRecords) {
     return {
-        map: state.map,
-        viewport: state.viewport
+        map: state.map
     };
 }
 

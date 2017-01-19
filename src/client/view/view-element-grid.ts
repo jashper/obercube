@@ -19,11 +19,12 @@ export class ViewElementGrid {
 
     private x = 0;
     private y = 0;
-    private width = 0;
-    private height = 0;
+    private width = 0; // adjusted to scale
+    private height = 0; // adjusted to scale
 
     private bins = new Map<number, Bin>();
     private visibleBins = new Set<number>();
+
     private elements = new Map<number, ViewElement>();
     private visibleElements = new Set<number>();
 
@@ -60,6 +61,13 @@ export class ViewElementGrid {
         }
     }
 
+    pan(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+
+        this.updateVisiblity(x, y, this.width, this.height);
+    }
+
     zoom(x: number, y: number, width: number, height: number) {
         this.x = x;
         this.y = y;
@@ -77,49 +85,43 @@ export class ViewElementGrid {
     }
 
     private updateVisiblity(x: number, y: number, width: number, height: number) {
-        const excluded = new Set<number>();
-        const included = new Set<number>();
-
         // get the newly visible bins
-        const newBins = this.getContainingBins(x, y, width, height);
-
+        const buffer = 2 * this.binSize; // pre-render some of the bins outside of the viewport
+        const newBins = this.getContainingBins(x - buffer, y - buffer, width + buffer, height + buffer);
         newBins.forEach((bin) => {
             (this.bins.get(bin) as Set<number>).forEach((id) => {
-                included.add(id);
+                const e = this.elements.get(id) as ViewElement;
+                if (this.isElementVisible(e)) {
+                    e.stage.visible = true;
+                    this.visibleElements.add(id);
+                }
             });
         });
 
         this.visibleBins.forEach((bin) => {
             if (!newBins.has(bin)) {
                 (this.bins.get(bin) as Set<number>).forEach((id) => {
-                    if (!included.has(id)) {
-                        excluded.add(id);
+                    const e = this.elements.get(id) as ViewElement;
+                    if (!this.isElementVisible(e)) {
+                        e.stage.visible = false;
+                        this.visibleElements.delete(id);
                     }
                 });
             }
         });
 
         this.visibleBins = newBins;
-
-        excluded.forEach((id) => {
-            const e = this.elements.get(id) as ViewElement;
-            e.stage.visible = false;
-            this.visibleElements.delete(id);
-        });
-
-        included.forEach((id) => {
-            if (!this.visibleElements.has(id)) {
-                const e = this.elements.get(id) as ViewElement;
-                e.stage.visible = true;
-                this.visibleElements.add(id);
-            }
-        });
     }
 
     insert(e: ViewElement) {
         const id = e.drawable.id;
-        const { x, y } = e.drawable;
-        const { width, height } = e.stage.getBounds();
+        let { x, y } = e.drawable;
+        let { width, height } = e.stage.getBounds();
+
+        width /= this.stage.scale.x;
+        height /= this.stage.scale.y;
+        x -= width / 2;
+        y -= height / 2;
 
         this.stage.addChild(e.stage);
         this.elements.set(id, e);
@@ -137,8 +139,13 @@ export class ViewElementGrid {
 
     remove(e: ViewElement) {
         const id = e.drawable.id;
-        const { x, y } = e.drawable;
-        const { width, height } = e.stage.getBounds();
+        let { x, y } = e.drawable;
+        let { width, height } = e.stage.getBounds();
+
+        width /= this.stage.scale.x;
+        height /= this.stage.scale.y;
+        x -= width / 2;
+        y -= height / 2;
 
         this.stage.removeChild(e.stage);
         this.elements.delete(id);
@@ -152,8 +159,10 @@ export class ViewElementGrid {
 
     private isElementVisible(e: ViewElement) {
         let { x, y } = e.drawable;
-        const { width, height } = e.stage.getBounds();
+        let { width, height } = e.stage.getBounds();
 
+        width /= this.stage.scale.x;
+        height /= this.stage.scale.y;
         x -= width / 2;
         y -= height / 2;
 

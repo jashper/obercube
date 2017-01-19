@@ -7,11 +7,6 @@ export interface Action<P> {
 
 export type Dispatch = <T>(action: Action<T>) => void;
 
-export interface Coordinates {
-    x: number;
-    y: number;
-}
-
 export interface Dimensions {
     width: number;
     height: number;

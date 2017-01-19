@@ -10,7 +10,8 @@ export default {
         ORANGE: 0xFD971F,
         SEAFOAM_GREEN: 0x08FDCC
     },
-    ZOOM_FACTOR: 1.25,
+    ZOOM_FACTOR: 1.07,
     MIN_SCALE: 0.5,
-    MAX_SCALE: 7
+    MAX_SCALE: 8,
+    PAN_BOUNDARY_RADIUS_PERCENT: 0.65
 };

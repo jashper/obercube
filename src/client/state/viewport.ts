@@ -10,85 +10,55 @@ import { OutpostElement } from '../view/outpost-element';
 import Constants from '../constants';
 
 interface ViewportState {
-    x: number;
-    y: number;
     width: number;
     height: number;
-    scale: number;
 }
 export interface ViewportStateRecord extends TypedRecord<ViewportStateRecord>, ViewportState {}
 
 const defaultState = makeTypedFactory<ViewportState, ViewportStateRecord>({
-    x: 0,
-    y: 0,
     width: 0,
-    height: 0,
-    scale: 1
+    height: 0
 });
 
+let prevId = 0;
 let renderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer;
+
 let mapWidth: number;
 let mapHeight: number;
 const grid = new ViewElementGrid(100);
 
-let prevId = 0;
+let x = 0;
+let y = 0;
+let viewWidth = 0;
+let viewHeight = 0;
+let scale = 1;
+
+let isPanning = false;
+let panningTheta = 0;
 
 export function viewport(state: ViewportStateRecord = defaultState(), action: Action<any>) {
     switch (action.type) {
-        case MatchActionType.NEW_MATCH:
-            mapWidth = action.payload.mapWidth;
-            mapHeight = action.payload.mapHeight;
-            return state;
-
         case WindowActionType.WINDOW_RESIZE:
             const { width, height } = action.payload;
-            grid.resize(width / state.scale, height / state.scale);
+            viewWidth = width;
+            viewHeight = height;
 
-            return state.merge({
-                width: action.payload.width,
-                height: action.payload.height
-            });
+            grid.resize(width / scale, height / scale);
 
+            return state.merge({ width, height });
+        case WindowActionType.WINDOW_START_PAN:
+            isPanning = true;
+            panningTheta = action.payload;
+
+            return state;
+        case WindowActionType.WINDOW_END_PAN:
+            isPanning = false;
+
+            return state;
         case MouseActionType.MOUSE_WHEEL:
-            const isZoomIn = action.payload.deltaY < 0;
+            zoom(action.payload);
 
-            const factor = (isZoomIn ? Constants.ZOOM_FACTOR : 1 / Constants.ZOOM_FACTOR);
-            const scale = state.scale * factor;
-
-            if (scale <= Constants.MIN_SCALE) {
-                return state;
-            } else if (scale >= Constants.MAX_SCALE) {
-                return state;
-            }
-
-            // get the local position for the click event (i.e. coordinates for when the scale is 1)
-            const { clientX, clientY } = action.payload;
-            const point = new PIXI.Point(clientX, clientY);
-            const localPt = new PIXI.Point();
-            PIXI.interaction.InteractionData.prototype.getLocalPosition(grid.stage, localPt, point);
-
-            // cap scroll events at the borders of the map 
-            localPt.x = Math.max(0, Math.min(mapWidth, localPt.x));
-            localPt.y = Math.max(0, Math.min(mapHeight, localPt.y));
-
-            // transform the origin in order to center the zoom at the coordinates of the scroll event
-            grid.stage.x = Math.min(0, point.x - (localPt.x * scale));
-            grid.stage.y = Math.min(0, point.y - (localPt.y * scale));
-
-            // get the new top left corner offset
-            let { x, y } = grid.stage;
-            x = -x / scale;
-            y = -y / scale;
-
-            // recenterScaledMap(state.width, state.height, scale);
-            grid.stage.scale.set(scale, scale);
-            grid.zoom(x, y, state.width / scale, state.height / scale);
-
-            return state.merge({
-                x,
-                y,
-                scale
-            });
+            return state;
         case WindowActionType.WINDOW_START_ANIMATION:
             renderer = action.payload.renderer;
 
@@ -110,13 +80,74 @@ export function viewport(state: ViewportStateRecord = defaultState(), action: Ac
             grid.insert(element);
 
             return state;
+        case MatchActionType.NEW_MATCH:
+            mapWidth = action.payload.mapWidth;
+            mapHeight = action.payload.mapHeight;
+
+            return state;
         default:
             return state;
     }
 }
 
 function animate() {
+    if (isPanning) {
+        pan();
+    }
+
     grid.activeElements.forEach((e) => e.animate());
     renderer.render(grid.stage);
+
     requestAnimationFrame(animate);
+}
+
+function pan() {
+    grid.stage.x += Math.cos(panningTheta) * 10 * scale;
+    grid.stage.y += Math.sin(panningTheta) * 10 * scale;
+
+    // restrict movement to the borders of the map 
+    grid.stage.x = Math.max(-mapWidth * scale + viewWidth, Math.min(0, grid.stage.x));
+    grid.stage.y = Math.max(-mapHeight * scale + viewHeight, Math.min(0, grid.stage.y));
+
+    // get the new top left corner offset
+    x = -grid.stage.x / scale;
+    y = -grid.stage.y / scale;
+
+    grid.pan(x, y);
+}
+
+function zoom(ev: WheelEvent) {
+    const isZoomIn = ev.deltaY < 0;
+
+    const factor = (isZoomIn ? Constants.ZOOM_FACTOR : 1 / Constants.ZOOM_FACTOR);
+    const oldScale = scale;
+    const newScale = scale * factor;
+
+    if (newScale <= Constants.MIN_SCALE || newScale >= Constants.MAX_SCALE) {
+        return;
+    }
+
+    scale = newScale;
+
+    // get the local position for the scroll event (i.e. coordinates for when the scale is 1)
+    const { clientX, clientY } = ev;
+    const point = new PIXI.Point(clientX, clientY);
+    const localPt = new PIXI.Point();
+    PIXI.interaction.InteractionData.prototype.getLocalPosition(grid.stage, localPt, point);
+
+    // transform the origin in order to center the zoom at the coordinates of the scroll event
+    const delta = scale - oldScale;
+    grid.stage.x -= localPt.x * delta;
+    grid.stage.y -= localPt.y * delta;
+
+    // restrict movement to the borders of the map 
+    grid.stage.x = Math.max(-mapWidth * scale + viewWidth, Math.min(0, grid.stage.x));
+    grid.stage.y = Math.max(-mapHeight * scale + viewHeight, Math.min(0, grid.stage.y));
+
+    // get the new top left corner offset
+    x = -grid.stage.x / scale;
+    y = -grid.stage.y / scale;
+
+    grid.stage.scale.set(scale, scale);
+    grid.zoom(x, y, viewWidth / scale, viewHeight / scale);
 }
