@@ -1,17 +1,16 @@
+import * as PIXI from 'pixi.js';
+
 import { Outpost } from '../actions/action';
 import Constants from '../constants';
 import { ViewElement } from './view-element-grid';
 
-interface InnerCircle {
-    circle: PIXI.Graphics;
-    theta: number;
-}
+const OutpostTextures: {[key: number]: PIXI.Texture} = {};
 
 export class OutpostElement implements ViewElement {
-    readonly drawable: Outpost;
-    readonly stage = new PIXI.Container();
+    static rotation = 3 * (Math.PI / 180);
 
-    private innerCircles: InnerCircle[] = [];
+    readonly drawable: Outpost;
+    stage: PIXI.Sprite;
 
     constructor(outpost: Outpost) {
         this.drawable = outpost;
@@ -19,46 +18,46 @@ export class OutpostElement implements ViewElement {
     }
 
     private init() {
-        let circle = new PIXI.Graphics();
-        circle.beginFill(this.drawable.color);
-        circle.drawCircle(0, 0, 200);
-        circle.endFill();
-        this.stage.addChild(circle);
+        this.stage = new PIXI.Sprite(OutpostTextures[this.drawable.color]);
 
-        circle = new PIXI.Graphics();
-        circle.beginFill(Constants.BACKGROUND_COLOR);
-        circle.drawCircle(0, 0, 155);
-        circle.endFill();
-        this.stage.addChild(circle);
-
-        circle = new PIXI.Graphics();
-        circle.beginFill(this.drawable.color);
-        circle.drawCircle(0, 0, 70);
-        circle.endFill();
-        this.stage.addChild(circle);
-
-        for (let i = 0; i < 360; i += 45) {
-            circle = new PIXI.Graphics();
-            circle.beginFill(this.drawable.color);
-            circle.drawCircle(0, 0, 20);
-            circle.endFill();
-            this.stage.addChild(circle);
-            this.innerCircles.push({
-                circle,
-                theta: i
-            });
-        }
-
-        this.stage.scale.set(0.10, 0.10);
+        this.stage.scale.set(0.1, 0.1);
+        this.stage.pivot.set(200, 200);
         this.stage.x = this.drawable.x;
         this.stage.y = this.drawable.y;
     }
 
+    static GENERATE_SPRITE(color: number): PIXI.Texture {
+        const circle = new PIXI.Graphics();
+        circle.beginFill(color);
+        circle.drawCircle(200, 200, 200);
+        circle.endFill();
+
+        circle.beginFill(Constants.BACKGROUND_COLOR);
+        circle.drawCircle(200, 200, 155);
+        circle.endFill();
+
+        circle.beginFill(color);
+        circle.drawCircle(200, 200, 70);
+        circle.endFill();
+
+        for (let theta = 0; theta < 360; theta += 45) {
+            const x = 200 + 110 * Math.cos(theta * (Math.PI / 180));
+            const y = 200 + 110 * Math.sin(theta * (Math.PI / 180));
+
+            circle.beginFill(color);
+            circle.drawCircle(x, y, 20);
+            circle.endFill();
+        }
+
+        return circle.generateCanvasTexture();
+    }
+
     animate() {
-        this.innerCircles.forEach((c) => {
-            c.theta += 3;
-            c.circle.x = 110 * Math.cos(c.theta * (Math.PI / 180));
-            c.circle.y = 110 * Math.sin(c.theta * (Math.PI / 180));
-        });
+        this.stage.rotation += OutpostElement.rotation;
     }
 }
+
+Object.keys(Constants.COLORS).filter(k => typeof k === 'string').forEach(k => {
+    const color: number = (Constants.COLORS[k as any] as any);
+    OutpostTextures[color] = OutpostElement.GENERATE_SPRITE(color);
+});

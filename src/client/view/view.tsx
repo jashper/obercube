@@ -73,11 +73,11 @@ class View extends React.Component<Props, {}> {
         // wait for the map to load
         let canSpawn = true;
         if (this.props.map.width !== prevProps.map.width) {
-            for (let x = 100; x < 5000; x += 240) {
-                for (let y = 100; y < 5000; y += 240) {
-                    if (Math.random() > 0.5) {
-                        continue;
-                    }
+            for (let x = 100; x < 4900; x += 120) {
+                for (let y = 100; y < 4900; y += 120) {
+                    // if (Math.random() > 0.5) {
+                    //     continue;
+                    // }
 
                     let color = 0;
                     switch (Math.ceil(Math.random() * (max - min) + min)) {
