@@ -8,6 +8,13 @@ export interface ViewElement {
     readonly animate: () => void;
 }
 
+interface ScaledPosition {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
 type Bin = Set<number>;
 
 export class ViewElementGrid {
@@ -65,7 +72,7 @@ export class ViewElementGrid {
         this.x = x;
         this.y = y;
 
-        this.updateVisiblity(x, y, this.width, this.height);
+        this.updateVisiblity();
     }
 
     zoom(x: number, y: number, width: number, height: number) {
@@ -74,20 +81,27 @@ export class ViewElementGrid {
         this.width = width;
         this.height = height;
 
-        this.updateVisiblity(x, y, width, height);
+        this.updateVisiblity();
     }
 
     resize(width: number, height: number) {
         this.width = width;
         this.height = height;
 
-        this.updateVisiblity(this.x, this.y, width, height);
+        this.updateVisiblity();
     }
 
-    private updateVisiblity(x: number, y: number, width: number, height: number) {
-        // get the newly visible bins
+    private updateVisiblity() {
         const buffer = 2 * this.binSize; // pre-render some of the bins outside of the viewport
-        const newBins = this.getContainingBins(x - buffer, y - buffer, width + buffer, height + buffer);
+        const position = {
+            x: this.x - buffer,
+            y: this.y - buffer,
+            width: this.width + buffer,
+            height: this.height + buffer
+        };
+
+        // get the newly visible bins
+        const newBins = this.getContainingBins(position);
         newBins.forEach((bin) => {
             (this.bins.get(bin) as Set<number>).forEach((id) => {
                 const e = this.elements.get(id) as ViewElement;
@@ -115,19 +129,13 @@ export class ViewElementGrid {
 
     insert(e: ViewElement) {
         const id = e.drawable.id;
-        let { x, y } = e.drawable;
-        let { width, height } = e.stage.getBounds();
-
-        width /= this.stage.scale.x;
-        height /= this.stage.scale.y;
-        x -= width / 2;
-        y -= height / 2;
+        const position = this.getScaledPosition(e);
 
         this.stage.addChild(e.stage);
         this.elements.set(id, e);
 
-        this.getContainingBins(x, y, width, height).forEach((bin) => {
-            (this.bins.get(bin) as Set<number>).add(e.drawable.id);
+        this.getContainingBins(position).forEach((bin) => {
+            (this.bins.get(bin) as Set<number>).add(id);
         });
 
         if (this.isElementVisible(e)) {
@@ -139,42 +147,46 @@ export class ViewElementGrid {
 
     remove(e: ViewElement) {
         const id = e.drawable.id;
-        let { x, y } = e.drawable;
-        let { width, height } = e.stage.getBounds();
-
-        width /= this.stage.scale.x;
-        height /= this.stage.scale.y;
-        x -= width / 2;
-        y -= height / 2;
+        const position = this.getScaledPosition(e);
 
         this.stage.removeChild(e.stage);
         this.elements.delete(id);
 
-        this.getContainingBins(x, y, width, height).forEach((bin) => {
-            (this.bins.get(bin) as Set<number>).delete(e.drawable.id);
+        this.getContainingBins(position).forEach((bin) => {
+            (this.bins.get(bin) as Set<number>).delete(id);
         });
 
         this.visibleElements.delete(id);
     }
 
     private isElementVisible(e: ViewElement) {
-        let { x, y } = e.drawable;
+        const { x, y, width, height } = this.getScaledPosition(e);
+        return this.isPointVisible(x, y) || this.isPointVisible(x + width, y) ||
+               this.isPointVisible(x, y + height) || this.isPointVisible(x + width, y + height);
+    }
+
+    private getScaledPosition(e: ViewElement): ScaledPosition {
+        const { x, y } = e.drawable;
         let { width, height } = e.stage.getBounds();
 
         width /= this.stage.scale.x;
         height /= this.stage.scale.y;
-        x -= width / 2;
-        y -= height / 2;
 
-        return this.isPointVisible(x, y) || this.isPointVisible(x + width, y) ||
-               this.isPointVisible(x, y + height) || this.isPointVisible(x + width, y + height);
+        return {
+            x: x - width / 2,
+            y: y - height / 2,
+            width,
+            height
+        };
     }
 
     private isPointVisible(x: number, y: number) {
         return (x > this.x) && (y > this.y) && (x < (this.x + this.width)) && (y < (this.y + this.height));
     }
 
-    private getContainingBins(x: number, y: number, width: number, height: number) {
+    private getContainingBins(p: ScaledPosition) {
+        const { x, y, width, height } = p;
+
         const bins = new Set<number>();
         for (let dx = this.roundToBin(Math.max(x, 0)); dx < Math.min(x + width, this.mapWidth); dx += this.binSize) {
             for (let dy = this.roundToBin(Math.max(y, 0)); dy < Math.min(y + height, this.mapHeight); dy += this.binSize) {
