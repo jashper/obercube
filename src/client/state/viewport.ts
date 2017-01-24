@@ -1,6 +1,6 @@
 import { TypedRecord, makeTypedFactory } from 'typed-immutable-record';
 
-import { Action } from '../actions/action';
+import { Action, Dispatch } from '../actions/action';
 import { MatchActionType } from '../actions/match';
 import { MouseActionType } from '../actions/mouse';
 import { SpawnActionType } from '../actions/spawn';
@@ -36,7 +36,7 @@ let scale = 1;
 let isPanning = false;
 let panningTheta = 0;
 
-export function viewport(state: ViewportStateRecord = defaultState(), action: Action<any>) {
+export function viewport(state: ViewportStateRecord = defaultState(), action: Action<any>, dispatch: Dispatch) {
     switch (action.type) {
         case WindowActionType.WINDOW_RESIZE:
             const { width, height } = action.payload;
@@ -86,6 +86,7 @@ export function viewport(state: ViewportStateRecord = defaultState(), action: Ac
 
             return state;
         default:
+            console.log(action);
             return state;
     }
 }
