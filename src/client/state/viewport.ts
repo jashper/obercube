@@ -5,6 +5,7 @@ import { MatchActionType } from '../actions/match';
 import { MouseActionType } from '../actions/mouse';
 import { SpawnActionType } from '../actions/spawn';
 import { WindowActionType } from '../actions/window';
+import { StoreRecords } from './reducers';
 import { ViewElementGrid } from '../view/view-element-grid';
 import { OutpostElement } from '../view/outpost-element';
 import Constants from '../constants';
@@ -15,17 +16,20 @@ interface ViewportState {
 }
 export interface ViewportStateRecord extends TypedRecord<ViewportStateRecord>, ViewportState {}
 
-const defaultState = makeTypedFactory<ViewportState, ViewportStateRecord>({
+export const defaultViewportState = makeTypedFactory<ViewportState, ViewportStateRecord>({
     width: 0,
     height: 0
 });
 
-let prevId = 0;
-let renderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer;
+let storeState: StoreRecords;
+function getState(): StoreRecords {
+    return storeState;
+}
 
 let mapWidth: number;
 let mapHeight: number;
 const grid = new ViewElementGrid(100);
+let renderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer;
 
 let x = 0;
 let y = 0;
@@ -36,7 +40,11 @@ let scale = 1;
 let isPanning = false;
 let panningTheta = 0;
 
-export function viewport(state: ViewportStateRecord = defaultState(), action: Action<any>, dispatch: Dispatch) {
+// should only ever modify the viewport state; keeps a reference to the entire store so
+// that ViewElements can have access to the most recent state in their animate() cycle 
+export function viewport(state: StoreRecords, action: Action<any>, dispatch: Dispatch): ViewportStateRecord {
+    storeState = state;
+
     switch (action.type) {
         case WindowActionType.WINDOW_RESIZE:
             const { width, height } = action.payload;
@@ -45,20 +53,20 @@ export function viewport(state: ViewportStateRecord = defaultState(), action: Ac
 
             grid.resize(width / scale, height / scale);
 
-            return state.merge({ width, height });
+            return state.viewport.merge({ width, height });
         case WindowActionType.WINDOW_START_PAN:
             isPanning = true;
             panningTheta = action.payload;
 
-            return state;
+            return state.viewport;
         case WindowActionType.WINDOW_END_PAN:
             isPanning = false;
 
-            return state;
+            return state.viewport;
         case MouseActionType.MOUSE_WHEEL:
             zoom(action.payload);
 
-            return state;
+            return state.viewport;
         case WindowActionType.WINDOW_START_ANIMATION:
             renderer = action.payload.renderer;
 
@@ -67,27 +75,22 @@ export function viewport(state: ViewportStateRecord = defaultState(), action: Ac
 
             animate();
 
-            return state;
+            return state.viewport;
         case SpawnActionType.SPAWN_OUTPOST:
-           const outpost = {
-                id: ++prevId,
-                x: action.payload.x,
-                y: action.payload.y,
-                color: action.payload.color || Constants.COLORS.TAN
-            };
+            const id = state.outpost.lastId as number;
+            const drawable = () => getState().outpost.idMap.get(id);
 
-            const element = new OutpostElement(outpost);
+            const element = new OutpostElement(drawable);
             grid.insert(element);
 
-            return state;
+            return state.viewport;
         case MatchActionType.NEW_MATCH:
             mapWidth = action.payload.mapWidth;
             mapHeight = action.payload.mapHeight;
 
-            return state;
+            return state.viewport;
         default:
-            console.log(action);
-            return state;
+            return state.viewport;
     }
 }
 

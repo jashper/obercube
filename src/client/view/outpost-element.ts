@@ -9,21 +9,18 @@ const OutpostTextures: {[key: number]: PIXI.Texture} = {};
 export class OutpostElement implements ViewElement {
     static rotation = 3 * (Math.PI / 180);
 
-    readonly drawable: Outpost;
-    stage: PIXI.Sprite;
+    readonly drawable: () => Outpost;
+    readonly stage: PIXI.Sprite;
 
-    constructor(outpost: Outpost) {
-        this.drawable = outpost;
-        this.init();
-    }
+    constructor(drawable: () => Outpost) {
+        this.drawable = drawable;
+        const d = this.drawable();
 
-    private init() {
-        this.stage = new PIXI.Sprite(OutpostTextures[this.drawable.color]);
-
+        this.stage = new PIXI.Sprite(OutpostTextures[d.color]);
         this.stage.scale.set(0.1, 0.1);
         this.stage.pivot.set(200, 200);
-        this.stage.x = this.drawable.x;
-        this.stage.y = this.drawable.y;
+        this.stage.x = d.x;
+        this.stage.y = d.y;
     }
 
     static GENERATE_SPRITE(color: number): PIXI.Texture {

@@ -3,7 +3,7 @@ import * as PIXI from 'pixi.js';
 import { Drawable } from '../actions/action';
 
 export interface ViewElement {
-    readonly drawable: Drawable;
+    readonly drawable: () => Drawable;
     readonly stage: PIXI.Container;
     readonly animate: () => void;
 }
@@ -128,7 +128,7 @@ export class ViewElementGrid {
     }
 
     insert(e: ViewElement) {
-        const id = e.drawable.id;
+        const id = e.drawable().id;
         const position = this.getScaledPosition(e);
 
         this.stage.addChild(e.stage);
@@ -146,7 +146,7 @@ export class ViewElementGrid {
     }
 
     remove(e: ViewElement) {
-        const id = e.drawable.id;
+        const id = e.drawable().id;
         const position = this.getScaledPosition(e);
 
         this.stage.removeChild(e.stage);
@@ -166,7 +166,7 @@ export class ViewElementGrid {
     }
 
     private getScaledPosition(e: ViewElement): ScaledPosition {
-        const { x, y } = e.drawable;
+        const { x, y } = e.drawable();
         let { width, height } = e.stage.getBounds();
 
         width /= this.stage.scale.x;
