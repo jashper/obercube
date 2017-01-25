@@ -1,9 +1,9 @@
 import * as PIXI from 'pixi.js';
 
-import { Drawable } from '../actions/action';
+import { DynamicDrawable, StaticDrawable } from '../actions/action';
 
 export interface ViewElement {
-    readonly drawable: () => Drawable;
+    readonly drawable: () => DynamicDrawable | StaticDrawable;
     readonly stage: PIXI.Container;
     readonly animate: () => void;
 }
@@ -166,7 +166,8 @@ export class ViewElementGrid {
     }
 
     private getScaledPosition(e: ViewElement): ScaledPosition {
-        const { x, y } = e.drawable();
+        const { x, y } = (e.drawable() as StaticDrawable).x ?
+            (e.drawable() as StaticDrawable) : (e.drawable() as DynamicDrawable).src;
         let { width, height } = e.stage.getBounds();
 
         width /= this.stage.scale.x;

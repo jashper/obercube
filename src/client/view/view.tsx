@@ -109,7 +109,7 @@ class View extends React.Component<Props, {}> {
                             break;
                     }
 
-                    this.props.spawnOutpost({ x, y, color });
+                    this.props.spawnOutpost({ src: { x, y }, color });
                     canSpawn = false;
                 }
             }

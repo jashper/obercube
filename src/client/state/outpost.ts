@@ -21,9 +21,9 @@ export function outpost(state: OutpostStateRecord = defaultState(), action: Acti
         case SpawnActionType.SPAWN_OUTPOST:
             const outpost = {
                 id: Constants.generateId(),
-                x: action.payload.x,
-                y: action.payload.y,
-                color: action.payload.color || Constants.COLORS.TAN
+                color: action.payload.color || Constants.COLORS.TAN,
+                x: action.payload.src.x,
+                y: action.payload.src.y
             };
 
             return state.merge({

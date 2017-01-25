@@ -1,6 +1,7 @@
 import { Action, Dispatch } from '../actions/action';
 import { map, MapStateRecord } from './map';
 import { outpost, OutpostStateRecord } from './outpost';
+import { unit, UnitStateRecord } from './unit';
 import { viewport, ViewportStateRecord, defaultViewportState } from './viewport';
 
 // Dispatch can only be used in an aync manner (i.e. don't call it directly in a reducer, schedule it instead)
@@ -9,6 +10,7 @@ export const reducers = (state: any = {}, action: Action<any>, dispatch: Dispatc
     const newState = {
         map: map(state.map, action),
         outpost: outpost(state.outpost, action),
+        unit: unit(state.unit, action),
         viewport: state.viewport || defaultViewportState()
     };
 
@@ -21,5 +23,6 @@ export const reducers = (state: any = {}, action: Action<any>, dispatch: Dispatc
 export interface StoreRecords {
     map: MapStateRecord;
     outpost: OutpostStateRecord;
+    unit: UnitStateRecord;
     viewport: ViewportStateRecord;
 }

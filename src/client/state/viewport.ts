@@ -42,7 +42,7 @@ let panningTheta = 0;
 
 // should only ever modify the viewport state; keeps a reference to the entire store so
 // that ViewElements can have access to the most recent state in their animate() cycle 
-export function viewport(state: StoreRecords, action: Action<any>, dispatch: Dispatch): ViewportStateRecord {
+export function viewport(state: StoreRecords, action: Action<any>, dispatch: Dispatch) {
     storeState = state;
 
     switch (action.type) {

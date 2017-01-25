@@ -7,6 +7,11 @@ export interface Action<P> {
 
 export type Dispatch = <T>(action: Action<T>) => void;
 
+export interface Coordinates {
+    x: number;
+    y: number;
+}
+
 export interface Dimensions {
     width: number;
     height: number;
@@ -14,12 +19,19 @@ export interface Dimensions {
 
 export interface Drawable {
     id: number;
-    x: number;
-    y: number;
     color: number;
 }
+export interface StaticDrawable extends Drawable {
+    x: number;
+    y: number;
+}
+export interface DynamicDrawable extends Drawable {
+    src: Coordinates;
+    dst: Coordinates;
+}
 
-export interface Outpost extends Drawable {}
+export interface Outpost extends StaticDrawable {}
+export interface Unit extends DynamicDrawable {}
 
 export interface RendererInfo {
     stage: PIXI.Container;
