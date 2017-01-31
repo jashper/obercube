@@ -22,12 +22,15 @@ export interface Drawable {
     color: number;
 }
 export interface StaticDrawable extends Drawable {
+    // top-left corner coordinates
     x: number;
     y: number;
 }
 export interface DynamicDrawable extends Drawable {
-    src: Coordinates;
-    dst: Coordinates;
+    // top-left corner coordinates
+    src: Coordinates; // where it starts
+    dst: Coordinates; // where it ends
+    theta: number;
 }
 
 export interface Outpost extends StaticDrawable {}

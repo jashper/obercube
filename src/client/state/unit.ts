@@ -5,6 +5,7 @@ import { Action, Unit } from '../actions/action';
 import { DestroyActionType } from '../actions/destroy';
 import { SpawnActionType } from '../actions/spawn';
 import Constants from '../constants';
+import { UnitElement } from '../view/unit-element';
 
 export interface UnitState {
     lastId: number | null;
@@ -20,19 +21,16 @@ const defaultState = makeTypedFactory<UnitState, UnitStateRecord>({
 export function unit(state: UnitStateRecord = defaultState(), action: Action<any>) {
     switch (action.type) {
         case SpawnActionType.SPAWN_UNIT:
-            const unit = {
-                id: Constants.generateId(),
-                color: action.payload.color || Constants.COLORS.TAN,
-                src: action.payload.src,
-                dst: action.payload.dst
-            };
+            const id = Constants.generateId();
+            const unit = UnitElement.GENERATE_DRAWABLE(id, action.payload);
 
             return state.merge({
-                lastId: unit.id,
-                idMap: state.idMap.set(unit.id, unit)
+                lastId: id,
+                idMap: state.idMap.set(id, unit)
             });
         case DestroyActionType.DESTROY_UNIT:
             return state.merge({
+                lastId: action.payload,
                 idMap: state.idMap.remove(action.payload)
             });
         default:

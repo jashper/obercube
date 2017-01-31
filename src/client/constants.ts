@@ -21,5 +21,5 @@ export default {
     MIN_SCALE: 0.3,
     MAX_SCALE: 8,
     PAN_BOUNDARY_RADIUS_PERCENT: 0.65,
-    ZOOM_FACTOR: 1.25,
+    ZOOM_FACTOR: 1.25
 };

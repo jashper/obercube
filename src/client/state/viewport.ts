@@ -1,6 +1,7 @@
 import { TypedRecord, makeTypedFactory } from 'typed-immutable-record';
 
 import { Action, Dispatch } from '../actions/action';
+import { DestroyActionType } from '../actions/destroy';
 import { MatchActionType } from '../actions/match';
 import { MouseActionType } from '../actions/mouse';
 import { SpawnActionType } from '../actions/spawn';
@@ -8,6 +9,7 @@ import { WindowActionType } from '../actions/window';
 import { StoreRecords } from './reducers';
 import { ViewElementGrid } from '../view/view-element-grid';
 import { OutpostElement } from '../view/outpost-element';
+import { UnitElement } from '../view/unit-element';
 import Constants from '../constants';
 
 interface ViewportState {
@@ -77,6 +79,7 @@ export function viewport(state: StoreRecords, action: Action<any>, dispatch: Dis
 
             return state.viewport;
         case SpawnActionType.SPAWN_OUTPOST:
+        {
             const id = state.outpost.lastId as number;
             const drawable = () => getState().outpost.idMap.get(id);
 
@@ -84,6 +87,24 @@ export function viewport(state: StoreRecords, action: Action<any>, dispatch: Dis
             grid.insert(element);
 
             return state.viewport;
+        }
+        case SpawnActionType.SPAWN_UNIT:
+        {
+            const id = state.unit.lastId as number;
+            const drawable = () => getState().unit.idMap.get(id);
+
+            const element = new UnitElement(drawable, dispatch);
+            grid.insert(element);
+
+            return state.viewport;
+        }
+        case DestroyActionType.DESTROY_UNIT:
+        {
+            const id = state.unit.lastId as number;
+            grid.remove(id);
+
+            return state.viewport;
+        }
         case MatchActionType.NEW_MATCH:
             mapWidth = action.payload.mapWidth;
             mapHeight = action.payload.mapHeight;

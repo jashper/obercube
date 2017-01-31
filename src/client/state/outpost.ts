@@ -4,6 +4,7 @@ import { TypedRecord, makeTypedFactory } from 'typed-immutable-record';
 import { Action, Outpost } from '../actions/action';
 import { SpawnActionType } from '../actions/spawn';
 import Constants from '../constants';
+import { OutpostElement } from '../view/outpost-element';
 
 export interface OutpostState {
     lastId: number | null;
@@ -19,16 +20,12 @@ const defaultState = makeTypedFactory<OutpostState, OutpostStateRecord>({
 export function outpost(state: OutpostStateRecord = defaultState(), action: Action<any>) {
     switch (action.type) {
         case SpawnActionType.SPAWN_OUTPOST:
-            const outpost = {
-                id: Constants.generateId(),
-                color: action.payload.color || Constants.COLORS.TAN,
-                x: action.payload.src.x,
-                y: action.payload.src.y
-            };
+            const id = Constants.generateId();
+            const outpost = OutpostElement.GENERATE_DRAWABLE(id, action.payload);
 
             return state.merge({
-                lastId: outpost.id,
-                idMap: state.idMap.set(outpost.id, outpost)
+                lastId: id,
+                idMap: state.idMap.set(id, outpost)
             });
         default:
             return state;

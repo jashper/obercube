@@ -145,8 +145,8 @@ export class ViewElementGrid {
         }
     }
 
-    remove(e: ViewElement) {
-        const id = e.drawable().id;
+    remove(id: number) {
+        const e = this.elements.get(id) as ViewElement;
         const position = this.getScaledPosition(e);
 
         this.stage.removeChild(e.stage);
@@ -166,16 +166,23 @@ export class ViewElementGrid {
     }
 
     private getScaledPosition(e: ViewElement): ScaledPosition {
-        const { x, y } = (e.drawable() as StaticDrawable).x ?
-            (e.drawable() as StaticDrawable) : (e.drawable() as DynamicDrawable).src;
-        let { width, height } = e.stage.getBounds();
+        let x: number;
+        let y: number;
+        if ((e.drawable() as StaticDrawable).x) {
+            const d = e.drawable() as StaticDrawable;
+            x = d.x;
+            y = d.y;
+        } else {
+            const d = e.drawable() as DynamicDrawable;
+            x = Math.min(d.src.x, d.dst.x);
+            y = Math.min(d.src.y, d.dst.y);
+        }
 
-        width /= this.stage.scale.x;
-        height /= this.stage.scale.y;
+        const { width, height } = e.stage.getLocalBounds();
 
         return {
-            x: x - width / 2,
-            y: y - height / 2,
+            x,
+            y,
             width,
             height
         };

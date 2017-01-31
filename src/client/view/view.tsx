@@ -11,7 +11,7 @@ import { Dispatch, Dimensions, RendererInfo} from '../actions/action';
 import { MapStateRecord } from '../state/map';
 import { WindowAction } from '../actions/window';
 import { MatchAction, MatchInfo } from '../actions/match';
-import { SpawnAction, SpawnInfo } from '../actions/spawn';
+import { SpawnAction, OutpostSpawnInfo } from '../actions/spawn';
 
 import Constants from '../constants';
 import MouseController from '../mouse-controller';
@@ -24,7 +24,7 @@ interface DispatchProps {
     windowResize(dimensions: Dimensions): void;
     startAnimation(info: RendererInfo): void;
     newMatch(info: MatchInfo): void;
-    spawnOutpost(info: SpawnInfo): void;
+    spawnOutpost(info: OutpostSpawnInfo): void;
 }
 
 interface Props extends StateProps, DispatchProps {}
@@ -109,7 +109,7 @@ class View extends React.Component<Props, {}> {
                             break;
                     }
 
-                    this.props.spawnOutpost({ src: { x, y }, color });
+                    this.props.spawnOutpost({ x, y, color });
                     canSpawn = false;
                 }
             }
