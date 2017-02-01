@@ -12,14 +12,14 @@ module.exports = {
     },
 
     resolve: {
-        extensions: ['', '.js', '.jsx', '.ts', '.tsx']
+        extensions: ['.js', '.jsx', '.ts', '.tsx']
     },
 
     module: {
-        loaders: [
+        rules: [
             {
                 test: /\.jsx?$/,
-                loader: 'babel',
+                loader: 'babel-loader',
                 include: `${__dirname}/src`,
             },
             {
@@ -53,7 +53,7 @@ if (process.env.NODE_ENV === 'production') {
 
         new webpack.optimize.UglifyJsPlugin({
             compress: {
-                warnings: false
+                sourceMap: true
             }
         })
     ]);
