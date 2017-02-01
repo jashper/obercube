@@ -17,6 +17,11 @@ export interface Dimensions {
     height: number;
 }
 
+export interface Delta {
+    dx: number;
+    dy: number;
+}
+
 export interface Drawable {
     id: number;
     color: number;

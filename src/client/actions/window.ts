@@ -1,4 +1,4 @@
-import { Action, Dimensions, RendererInfo } from './action';
+import { Action, Dimensions, RendererInfo, Delta } from './action';
 
 export const WindowActionType = {
     WINDOW_RESIZE: 'WINDOW_RESIZE',
@@ -22,10 +22,10 @@ export const WindowAction = {
         };
     },
 
-    startPan: (theta: number): Action<number> => {
+    startPan: (delta: Delta): Action<Delta> => {
         return {
             type: WindowActionType.WINDOW_START_PAN,
-            payload: theta
+            payload: delta
         };
     },
 

@@ -22,6 +22,7 @@
     "no-unused-variable": [true, "react"],
     "no-increment-decrement": false,
     "prefer-type-cast": false,
-    "no-suspicious-comment": false
+    "no-suspicious-comment": false,
+    "one-variable-per-declaration": [false]
   }
 }

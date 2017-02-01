@@ -68,23 +68,9 @@ export class ViewElementGrid {
         }
     }
 
-    pan(x: number, y: number) {
+    update(x: number, y: number, width: number, height: number) {
         this.x = x;
         this.y = y;
-
-        this.updateVisiblity();
-    }
-
-    zoom(x: number, y: number, width: number, height: number) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-
-        this.updateVisiblity();
-    }
-
-    resize(width: number, height: number) {
         this.width = width;
         this.height = height;
 

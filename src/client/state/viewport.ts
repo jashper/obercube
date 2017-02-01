@@ -1,6 +1,6 @@
 import { TypedRecord, makeTypedFactory } from 'typed-immutable-record';
 
-import { Action, Dispatch } from '../actions/action';
+import { Action, Dispatch, Delta } from '../actions/action';
 import { DestroyActionType } from '../actions/destroy';
 import { MatchActionType } from '../actions/match';
 import { MouseActionType } from '../actions/mouse';
@@ -30,17 +30,21 @@ function getState(): StoreRecords {
 
 let mapWidth: number;
 let mapHeight: number;
-const grid = new ViewElementGrid(100);
+const grid = new ViewElementGrid(25);
 let renderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer;
 
 let x = 0;
 let y = 0;
-let viewWidth = 0;
-let viewHeight = 0;
+let width = 0;
+let height = 0;
 let scale = 1;
 
+let targetX = 0;
+let targetY = 0;
+let targetScale = 1;
+
 let isPanning = false;
-let panningTheta = 0;
+let panDelta: Delta;
 
 // should only ever modify the viewport state; keeps a reference to the entire store so
 // that ViewElements can have access to the most recent state in their animate() cycle 
@@ -49,16 +53,15 @@ export function viewport(state: StoreRecords, action: Action<any>, dispatch: Dis
 
     switch (action.type) {
         case WindowActionType.WINDOW_RESIZE:
-            const { width, height } = action.payload;
-            viewWidth = width;
-            viewHeight = height;
+            width = action.payload.width;
+            height = action.payload.height;
 
-            grid.resize(width / scale, height / scale);
+            grid.update(x, y, width / scale, height / scale);
 
             return state.viewport.merge({ width, height });
         case WindowActionType.WINDOW_START_PAN:
             isPanning = true;
-            panningTheta = action.payload;
+            panDelta = action.payload;
 
             return state.viewport;
         case WindowActionType.WINDOW_END_PAN:
@@ -66,7 +69,7 @@ export function viewport(state: StoreRecords, action: Action<any>, dispatch: Dis
 
             return state.viewport;
         case MouseActionType.MOUSE_WHEEL:
-            zoom(action.payload);
+            setZoomTargets(action.payload);
 
             return state.viewport;
         case WindowActionType.WINDOW_START_ANIMATION:
@@ -117,8 +120,10 @@ export function viewport(state: StoreRecords, action: Action<any>, dispatch: Dis
 
 function animate() {
     if (isPanning) {
-        pan();
+        setPanTargets();
     }
+
+    updateStage();
 
     grid.activeElements.forEach((e) => e.animate());
     renderer.render(grid.stage);
@@ -126,33 +131,18 @@ function animate() {
     requestAnimationFrame(animate);
 }
 
-function pan() {
-    grid.stage.x += Math.cos(panningTheta) * 10 * scale;
-    grid.stage.y += Math.sin(panningTheta) * 10 * scale;
-
-    // restrict movement to the borders of the map 
-    grid.stage.x = Math.max(-mapWidth * scale + viewWidth, Math.min(0, grid.stage.x));
-    grid.stage.y = Math.max(-mapHeight * scale + viewHeight, Math.min(0, grid.stage.y));
-
-    // get the new top left corner offset
-    x = -grid.stage.x / scale;
-    y = -grid.stage.y / scale;
-
-    grid.pan(x, y);
-}
-
-function zoom(ev: WheelEvent) {
+function setZoomTargets(ev: WheelEvent) {
     const isZoomIn = ev.deltaY < 0;
 
     const factor = (isZoomIn ? Constants.ZOOM_FACTOR : 1 / Constants.ZOOM_FACTOR);
-    const oldScale = scale;
-    const newScale = scale * factor;
+    const oldScale = targetScale;
+    const newScale = targetScale * factor;
 
     if (newScale <= Constants.MIN_SCALE || newScale >= Constants.MAX_SCALE) {
         return;
     }
 
-    scale = newScale;
+    targetScale = newScale;
 
     // get the local position for the scroll event (i.e. coordinates for when the scale is 1)
     const { clientX, clientY } = ev;
@@ -161,18 +151,37 @@ function zoom(ev: WheelEvent) {
     PIXI.interaction.InteractionData.prototype.getLocalPosition(grid.stage, localPt, point);
 
     // transform the origin in order to center the zoom at the coordinates of the scroll event
-    const delta = scale - oldScale;
-    grid.stage.x -= localPt.x * delta;
-    grid.stage.y -= localPt.y * delta;
+    const delta = targetScale - oldScale;
+    targetX -= localPt.x * delta;
+    targetY -= localPt.y * delta;
+}
+
+function setPanTargets() {
+    targetX += panDelta.dx * scale;
+    targetY += panDelta.dy * scale;
+}
+
+function updateStage() {
+    const k = 7;
+
+    grid.stage.x += (targetX - grid.stage.x) * k * (1 / 60);
+    grid.stage.y += (targetY - grid.stage.y) * k * (1 / 60);
+
+    scale += (targetScale - scale) * k * (1 / 60);
+    grid.stage.scale.set(scale, scale);
 
     // restrict movement to the borders of the map 
-    grid.stage.x = Math.max(-mapWidth * scale + viewWidth, Math.min(0, grid.stage.x));
-    grid.stage.y = Math.max(-mapHeight * scale + viewHeight, Math.min(0, grid.stage.y));
+    // grid.stage.x = Math.max(-mapWidth * scale + width, Math.min(0, grid.stage.x));
+    // grid.stage.y = Math.max(-mapHeight * scale + height, Math.min(0, grid.stage.y));
 
     // get the new top left corner offset
     x = -grid.stage.x / scale;
     y = -grid.stage.y / scale;
 
-    grid.stage.scale.set(scale, scale);
-    grid.zoom(x, y, viewWidth / scale, viewHeight / scale);
+    // expensive visibility check -> no need to run every frame, only when necessary
+    // TODO: this shouldn't be necessary -> we should only be doing this when the targets are set, not every frame
+    if (Math.abs(targetX - grid.stage.x) > 10 || Math.abs(targetY - grid.stage.y) > 10 ||
+            Math.abs(targetScale - scale) > 10) {
+        grid.update(x, y, width / scale, height / scale);
+    }
 }

@@ -8,7 +8,7 @@ import 'rxjs/add/operator/debounceTime';
 
 import Constants from './constants';
 import { StoreRecords } from './state/reducers';
-import { Dispatch } from './actions/action';
+import { Dispatch, Delta } from './actions/action';
 import { ViewportStateRecord } from './state/viewport';
 import { MouseAction } from './actions/mouse';
 import { WindowAction } from './actions/window';
@@ -19,15 +19,14 @@ interface StateProps {
 
 interface DispatchProps {
     mouseWheel(ev: WheelEvent): void;
-    startPan(theta: number): void;
+    startPan(delta: Delta): void;
     endPan(): void;
 }
 
 interface Props extends StateProps, DispatchProps {}
 
 class MouseController extends React.Component<Props, {}> {
-    private isPanning = false;
-    private panningTheta = 0;
+    panDelta: Delta = { dx: 0, dy: 0 };
 
     componentDidMount() {
         // window.onclick = this.onClick.bind(this);
@@ -54,20 +53,16 @@ class MouseController extends React.Component<Props, {}> {
     // }
 
     private onMouseMove(ev: MouseEvent) {
-        const activePan = this.checkPanning(ev.clientX, ev.clientY);
-        if (!activePan && this.isPanning) {
-            this.isPanning = false;
-            this.props.endPan();
-        } else if (activePan) {
-            const theta = this.getPanningTheta(ev.clientX, ev.clientY);
-            if (this.isPanning && theta === this.panningTheta) {
-                return;
-            }
+        const newDelta = this.getPanDelta(ev.clientX, ev.clientY);
 
-            this.isPanning = true;
-            this.panningTheta = theta;
-            this.props.startPan(theta);
+        const { dx, dy } = newDelta;
+        if (dx === 0 && dy === 0) {
+            this.props.endPan();
+        } else if (dx !== this.panDelta.dx || dy !== this.panDelta.dy) {
+            this.props.startPan(newDelta);
         }
+
+        this.panDelta = newDelta;
     }
 
     private onWheel(ev: WheelEvent, itr: number = 0) {
@@ -76,15 +71,23 @@ class MouseController extends React.Component<Props, {}> {
         this.props.mouseWheel(ev);
     }
 
-    private checkPanning(x: number, y: number) {
-        const r = Constants.PAN_BOUNDARY_RADIUS_PERCENT *
-           Math.min(this.props.viewport.width, this.props.viewport.height) / 2;
-        return Math.pow(x - this.props.viewport.width / 2, 2) +
-            Math.pow(y - this.props.viewport.height / 2, 2) > r * r;
-    }
+    private getPanDelta(x: number, y: number): Delta {
+        let dx = 0, dy = 0;
+        const bound = Constants.PAN_BOUNDARY_PIXELS;
 
-    private getPanningTheta(x: number, y: number): number {
-        return Math.atan2((this.props.viewport.height / 2 - y), (this.props.viewport.width / 2 - x));
+        if (x < bound) {
+            dx = 1;
+        } else if (x > this.props.viewport.width - bound) {
+            dx = -1;
+        }
+
+        if (y < bound) {
+            dy = 1;
+        } else if (y > this.props.viewport.height - bound) {
+            dy = -1;
+        }
+
+        return { dx: dx * 10, dy: dy * 10 };
     }
 }
 

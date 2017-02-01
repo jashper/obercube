@@ -20,6 +20,6 @@ export default {
     generateId,
     MIN_SCALE: 0.3,
     MAX_SCALE: 8,
-    PAN_BOUNDARY_RADIUS_PERCENT: 0.65,
+    PAN_BOUNDARY_PIXELS: 75,
     ZOOM_FACTOR: 1.25
 };
