@@ -47,7 +47,7 @@ let isPanning = false;
 let panDelta: Delta;
 
 // should only ever modify the viewport state; keeps a reference to the entire store so
-// that ViewElements can have access to the most recent state in their animate() cycle 
+// that ViewElements can have access to the most recent state in their animate() cycle
 export function viewport(state: StoreRecords, action: Action<any>, dispatch: Dispatch) {
     storeState = state;
 
@@ -86,7 +86,7 @@ export function viewport(state: StoreRecords, action: Action<any>, dispatch: Dis
             const id = state.outpost.lastId as number;
             const drawable = () => getState().outpost.idMap.get(id);
 
-            const element = new OutpostElement(drawable);
+            const element = new OutpostElement(drawable, getState, dispatch);
             grid.insert(element);
 
             return state.viewport;
@@ -96,7 +96,7 @@ export function viewport(state: StoreRecords, action: Action<any>, dispatch: Dis
             const id = state.unit.lastId as number;
             const drawable = () => getState().unit.idMap.get(id);
 
-            const element = new UnitElement(drawable, dispatch);
+            const element = new UnitElement(drawable, getState, dispatch);
             grid.insert(element);
 
             return state.viewport;
@@ -131,6 +131,11 @@ function animate() {
     requestAnimationFrame(animate);
 }
 
+function setPanTargets() {
+    targetX += panDelta.dx * scale;
+    targetY += panDelta.dy * scale;
+}
+
 function setZoomTargets(ev: WheelEvent) {
     const isZoomIn = ev.deltaY < 0;
 
@@ -156,11 +161,6 @@ function setZoomTargets(ev: WheelEvent) {
     targetY -= localPt.y * delta;
 }
 
-function setPanTargets() {
-    targetX += panDelta.dx * scale;
-    targetY += panDelta.dy * scale;
-}
-
 function updateStage() {
     const k = 7;
 
@@ -170,7 +170,7 @@ function updateStage() {
     scale += (targetScale - scale) * k * (1 / 60);
     grid.stage.scale.set(scale, scale);
 
-    // restrict movement to the borders of the map 
+    // restrict movement to the borders of the map
     // grid.stage.x = Math.max(-mapWidth * scale + width, Math.min(0, grid.stage.x));
     // grid.stage.y = Math.max(-mapHeight * scale + height, Math.min(0, grid.stage.y));
 

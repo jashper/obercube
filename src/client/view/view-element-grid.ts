@@ -1,12 +1,6 @@
 import * as PIXI from 'pixi.js';
 
-import { DynamicDrawable, StaticDrawable } from '../actions/action';
-
-export interface ViewElement {
-    readonly drawable: () => DynamicDrawable | StaticDrawable;
-    readonly stage: PIXI.Container;
-    readonly animate: () => void;
-}
+import { ViewElement } from './view-element';
 
 interface ScaledPosition {
     x: number;
@@ -147,22 +141,15 @@ export class ViewElementGrid {
 
     private isElementVisible(e: ViewElement) {
         const { x, y, width, height } = this.getScaledPosition(e);
+
         return this.isPointVisible(x, y) || this.isPointVisible(x + width, y) ||
                this.isPointVisible(x, y + height) || this.isPointVisible(x + width, y + height);
     }
 
     private getScaledPosition(e: ViewElement): ScaledPosition {
-        let x: number;
-        let y: number;
-        if ((e.drawable() as StaticDrawable).x) {
-            const d = e.drawable() as StaticDrawable;
-            x = d.x;
-            y = d.y;
-        } else {
-            const d = e.drawable() as DynamicDrawable;
-            x = Math.min(d.src.x, d.dst.x);
-            y = Math.min(d.src.y, d.dst.y);
-        }
+        let { x, y } = e.stage;
+        x -= e.stage.pivot.x;
+        y -= e.stage.pivot.y;
 
         const { width, height } = e.stage.getLocalBounds();
 

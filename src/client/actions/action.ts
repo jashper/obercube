@@ -32,10 +32,9 @@ export interface StaticDrawable extends Drawable {
     y: number;
 }
 export interface DynamicDrawable extends Drawable {
-    // top-left corner coordinates
-    src: Coordinates; // where it starts
-    dst: Coordinates; // where it ends
-    theta: number;
+    // top-left corner coordinates or ids of other drawables
+    src: Coordinates | number; // where it starts
+    dst: Coordinates | number; // where it ends
 }
 
 export interface Outpost extends StaticDrawable {}

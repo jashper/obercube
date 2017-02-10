@@ -1,21 +1,23 @@
 import * as PIXI from 'pixi.js';
 
-import { Outpost } from '../actions/action';
+import { Dispatch, Outpost } from '../actions/action';
 import Constants from '../constants';
 import { OutpostSpawnInfo } from '../actions/spawn';
-import { ViewElement } from './view-element-grid';
+import { StoreRecords } from '../state/reducers';
+import { ViewElement } from './view-element';
 
 const OutpostTextures: {[key: number]: PIXI.Texture} = {};
 
-export class OutpostElement implements ViewElement {
+export class OutpostElement extends ViewElement {
     static radius = 20;
     static rotation = 3 * (Math.PI / 180);
 
-    readonly drawable: () => Outpost;
-    readonly stage: PIXI.Sprite;
+    constructor(readonly drawable: () => Outpost,
+                readonly state: () => StoreRecords,
+                readonly dispatch: Dispatch
+    ) {
+        super(drawable, state, dispatch);
 
-    constructor(drawable: () => Outpost) {
-        this.drawable = drawable;
         const d = this.drawable();
         const r = OutpostElement.radius;
 

@@ -1,63 +1,71 @@
 import * as PIXI from 'pixi.js';
 
-import { Dispatch, Unit } from '../actions/action';
+import { Coordinates, Dispatch, Unit } from '../actions/action';
 import { DestroyAction } from '../actions/destroy';
 import { UnitSpawnInfo } from '../actions/spawn';
 import Constants from '../constants';
 import { OutpostElement } from './outpost-element';
-import { ViewElement } from './view-element-grid';
+import { StoreRecords } from '../state/reducers';
+import { ViewElement } from './view-element';
 
 const SubmarineTextures: {[key: number]: PIXI.Texture} = {};
 
-export class UnitElement implements ViewElement {
+export class UnitElement extends ViewElement {
     static speed = 0.75;
 
-    readonly drawable: () => Unit;
-    private prevDrawable = {} as Unit;
-    private dispatch: Dispatch;
-
-    readonly stage: PIXI.Sprite;
     private submarine: PIXI.Sprite;
+
     private isDone = false;
+    private src: Coordinates;
+    private dst: Coordinates;
+    private theta: number;
 
-    constructor(drawable: () => Unit, dispatch: Dispatch) {
-        this.drawable = () => {
-            this.prevDrawable = drawable() || this.prevDrawable;
-            return this.prevDrawable;
-        };
-        this.dispatch = dispatch;
-        this.stage = new PIXI.Sprite();
+    constructor(readonly drawable: () => Unit,
+                readonly state: () => StoreRecords,
+                readonly dispatch: Dispatch
+    ) {
+        super(drawable, state, dispatch);
 
-        const d = this.drawable();
+        this.setCoordinates();
+
         const line = new PIXI.Graphics();
         line.lineStyle(1, 0xFFFFFF);
 
         line.moveTo(0, 0);
-        line.lineTo(d.dst.x - d.src.x, d.dst.y - d.src.y);
+        line.lineTo(this.dst.x - this.src.x, this.dst.y - this.src.y);
 
-        this.stage.x = d.src.x;
-        this.stage.y = d.src.y;
+        this.stage.x = this.src.x;
+        this.stage.y = this.src.y;
         this.stage.addChild(line);
 
+        const d = this.drawable();
         this.submarine = new PIXI.Sprite(SubmarineTextures[d.color]);
-        this.submarine.x += 20 * Math.cos(d.theta);
-        this.submarine.y += 20 * Math.sin(d.theta);
+        this.submarine.x += 20 * Math.cos(this.theta);
+        this.submarine.y += 20 * Math.sin(this.theta);
         this.submarine.pivot.set(6, 20);
-        this.submarine.rotation -= (Math.PI / 2) - d.theta;
+        this.submarine.rotation -= (Math.PI / 2) - this.theta;
         this.stage.addChild(this.submarine);
     }
 
-    static GENERATE_DRAWABLE(id: number, info: UnitSpawnInfo): Unit {
-        const { src, dst } = info;
+    private setCoordinates() {
+        const d = this.drawable();
+        const src = this.state().outpost.idMap.get(d.src as number);
+        const dst = this.state().outpost.idMap.get(d.dst as number);
+
         const r = OutpostElement.radius;
         const theta = Math.atan2(dst.y - src.y, dst.x - src.x);
 
+        this.src = { x: src.x + r * (1 + Math.cos(theta)), y: src.y + r * (1 + Math.sin(theta)) };
+        this.dst = { x: dst.x + r * (1 - Math.cos(theta)), y: dst.y + r * (1 - Math.sin(theta)) };
+        this.theta = theta;
+    }
+
+    static GENERATE_DRAWABLE(id: number, info: UnitSpawnInfo): Unit {
         return {
             id,
             color: info.color,
-            src: { x: src.x + r * (1 + Math.cos(theta)), y: src.y + r * (1 + Math.sin(theta)) },
-            dst: { x: dst.x + r * (1 - Math.cos(theta)), y: dst.y + r * (1 - Math.sin(theta)) },
-            theta
+            src: info.src,
+            dst: info.dst
         };
     }
 
@@ -76,15 +84,16 @@ export class UnitElement implements ViewElement {
         }
 
         const d = this.drawable();
-        if (this.submarine.x + this.submarine.getBounds().width >= d.dst.x - d.src.x + 20 ||
-                this.submarine.y + this.submarine.getBounds().height >= d.dst.y - d.src.y + 20) {
+
+        if (this.submarine.x + this.submarine.getBounds().width >= this.dst.x - this.src.x + 20 ||
+                this.submarine.y + this.submarine.getBounds().height >= this.dst.y - this.src.y + 20) {
             this.dispatch(DestroyAction.unit(d.id));
             this.isDone = true;
             return;
         }
 
-        this.submarine.x += UnitElement.speed * Math.cos(d.theta);
-        this.submarine.y += UnitElement.speed * Math.sin(d.theta);
+        this.submarine.x += UnitElement.speed * Math.cos(this.theta);
+        this.submarine.y += UnitElement.speed * Math.sin(this.theta);
     }
 }
 

@@ -1,4 +1,4 @@
-import { Action, Outpost } from './action';
+import { Action } from './action';
 
 export const SpawnActionType = {
     SPAWN_OUTPOST: 'SPAWN_OUTPOST',
@@ -12,8 +12,8 @@ export interface OutpostSpawnInfo {
 }
 
 export interface UnitSpawnInfo {
-    src: Outpost;
-    dst: Outpost;
+    src: number; // id of the src Outpost
+    dst: number; // id of the dest Outpost
     color: number;
 }
 
