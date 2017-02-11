@@ -142,8 +142,8 @@ export class ViewElementGrid {
     private isElementVisible(e: ViewElement) {
         const { x, y, width, height } = this.getScaledPosition(e);
 
-        return this.isPointVisible(x, y) || this.isPointVisible(x + width, y) ||
-               this.isPointVisible(x, y + height) || this.isPointVisible(x + width, y + height);
+        return !((x + width < this.x) || (this.x + this.width < x) ||
+                    (y + height < this.y) || (this.y + this.height < y));
     }
 
     private getScaledPosition(e: ViewElement): ScaledPosition {
@@ -159,10 +159,6 @@ export class ViewElementGrid {
             width,
             height
         };
-    }
-
-    private isPointVisible(x: number, y: number) {
-        return (x > this.x) && (y > this.y) && (x < (this.x + this.width)) && (y < (this.y + this.height));
     }
 
     private getContainingBins(p: ScaledPosition) {

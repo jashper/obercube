@@ -84,9 +84,10 @@ export class UnitElement extends ViewElement {
         }
 
         const d = this.drawable();
+        const { width, height } = this.submarine.getLocalBounds();
 
-        if (this.submarine.x + this.submarine.getBounds().width >= this.dst.x - this.src.x + 20 ||
-                this.submarine.y + this.submarine.getBounds().height >= this.dst.y - this.src.y + 20) {
+        if (this.submarine.x + width >= this.dst.x - this.src.x + 20 ||
+                this.submarine.y + height >= this.dst.y - this.src.y + 20) {
             this.dispatch(DestroyAction.unit(d.id));
             this.isDone = true;
             return;
