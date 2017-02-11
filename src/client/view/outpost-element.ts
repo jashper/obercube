@@ -1,8 +1,8 @@
 import * as PIXI from 'pixi.js';
 
-import { Dispatch, Outpost } from '../actions/action';
+import { Action, Dispatch, Outpost } from '../actions/action';
 import Constants from '../constants';
-import { OutpostSpawnInfo } from '../actions/spawn';
+import { OutpostSpawnInfo, UnitSpawnInfo, SpawnAction } from '../actions/spawn';
 import { StoreRecords } from '../state/reducers';
 import { ViewElement } from './view-element';
 
@@ -11,6 +11,8 @@ const OutpostTextures: {[key: number]: PIXI.Texture} = {};
 export class OutpostElement extends ViewElement {
     static radius = 20;
     static rotation = 3 * (Math.PI / 180);
+
+    private unitSpawnQueue: Action<UnitSpawnInfo>[] = [];
 
     constructor(readonly drawable: () => Outpost,
                 readonly state: () => StoreRecords,
@@ -25,6 +27,8 @@ export class OutpostElement extends ViewElement {
         this.stage.x = d.x + r;
         this.stage.y = d.y + r;
         this.stage.pivot.set(r, r);
+
+        this.bounds = this.stage.getLocalBounds();
     }
 
     static GENERATE_DRAWABLE(id: number, info: OutpostSpawnInfo): Outpost {
@@ -66,6 +70,28 @@ export class OutpostElement extends ViewElement {
 
     animate() {
         this.stage.rotation += OutpostElement.rotation;
+
+        if (this.unitSpawnQueue.length > 0) {
+            this.unitSpawnQueue.forEach((action) => this.dispatch(action));
+            this.unitSpawnQueue = [];
+        }
+    }
+
+    onClick(activeId: number) {
+        const id = this.drawable().id;
+        if (activeId === 0) {
+            return id;
+        } else if (activeId !== id) {
+            this.unitSpawnQueue.push(SpawnAction.unit({
+                src: activeId,
+                dst: id,
+                color: this.state().outpost.idMap.get(activeId).color
+            }));
+
+            return 0;
+        } else {
+            return activeId;
+        }
     }
 }
 

@@ -30,6 +30,8 @@ function getState(): StoreRecords {
 
 let mapWidth: number;
 let mapHeight: number;
+
+let activeElementId = 0;
 const grid = new ViewElementGrid(25);
 let renderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer;
 
@@ -70,6 +72,20 @@ export function viewport(state: StoreRecords, action: Action<any>, dispatch: Dis
             return state.viewport;
         case MouseActionType.MOUSE_WHEEL:
             setZoomTargets(action.payload);
+
+            return state.viewport;
+        case MouseActionType.MOUSE_CLICK:
+            // get the local position for the click
+            const point = new PIXI.Point(action.payload.x, action.payload.y);
+            const localPt = new PIXI.Point();
+            PIXI.interaction.InteractionData.prototype.getLocalPosition(grid.stage, localPt, point);
+
+            const elements = grid.getBinElements(localPt.x, localPt.y);
+            elements.forEach((e) => {
+                if (e instanceof OutpostElement) {
+                    activeElementId = e.onClick(activeElementId);
+                }
+            });
 
             return state.viewport;
         case WindowActionType.WINDOW_START_ANIMATION:

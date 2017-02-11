@@ -6,6 +6,7 @@ import { StoreRecords } from '../state/reducers';
 
 export abstract class ViewElement {
     stage = new PIXI.Sprite();
+    bounds: PIXI.Rectangle;
 
     constructor(readonly drawable: () => Drawable,
                 readonly state: () => StoreRecords,

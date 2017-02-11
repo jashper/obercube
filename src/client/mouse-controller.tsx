@@ -8,7 +8,7 @@ import 'rxjs/add/operator/debounceTime';
 
 import Constants from './constants';
 import { StoreRecords } from './state/reducers';
-import { Dispatch, Delta } from './actions/action';
+import { Coordinates, Dispatch, Delta } from './actions/action';
 import { ViewportStateRecord } from './state/viewport';
 import { MouseAction } from './actions/mouse';
 import { WindowAction } from './actions/window';
@@ -18,6 +18,7 @@ interface StateProps {
 }
 
 interface DispatchProps {
+    mouseClick(point: Coordinates): void;
     mouseWheel(ev: WheelEvent): void;
     startPan(delta: Delta): void;
     endPan(): void;
@@ -26,10 +27,14 @@ interface DispatchProps {
 interface Props extends StateProps, DispatchProps {}
 
 class MouseController extends React.Component<Props, {}> {
+    isPanning = false;
     panDelta: Delta = { dx: 0, dy: 0 };
 
     componentDidMount() {
-        // window.onclick = this.onClick.bind(this);
+        Observable.fromEvent(window, 'click')
+            .subscribe({
+                next: (ev: MouseEvent) => this.onClick(ev)
+            });
 
         Observable.fromEvent(window, 'wheel')
             .debounceTime(10)
@@ -47,18 +52,19 @@ class MouseController extends React.Component<Props, {}> {
         return null;
     }
 
-    // private onClick(ev: MouseEvent) {
-    //     const x = ev.clientX;
-    //     const y = ev.clientY;
-    // }
+    private onClick(ev: MouseEvent) {
+        this.props.mouseClick({ x: ev.clientX, y: ev.clientY });
+    }
 
     private onMouseMove(ev: MouseEvent) {
         const newDelta = this.getPanDelta(ev.clientX, ev.clientY);
 
         const { dx, dy } = newDelta;
-        if (dx === 0 && dy === 0) {
+        if (dx === 0 && dy === 0 && this.isPanning) {
+            this.isPanning = false;
             this.props.endPan();
         } else if (dx !== this.panDelta.dx || dy !== this.panDelta.dy) {
+            this.isPanning = true;
             this.props.startPan(newDelta);
         }
 
@@ -99,6 +105,7 @@ function mapStateToProps(state: StoreRecords) {
 
 function mapDispatchToProps(dispatch: Dispatch) {
     return {
+        mouseClick: bindActionCreators(MouseAction.click, dispatch),
         mouseWheel: bindActionCreators(MouseAction.wheel, dispatch),
         startPan: bindActionCreators(WindowAction.startPan, dispatch),
         endPan: bindActionCreators(WindowAction.endPan, dispatch)

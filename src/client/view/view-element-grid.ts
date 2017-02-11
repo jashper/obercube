@@ -36,6 +36,12 @@ export class ViewElementGrid {
                 .map((id) => this.elements.get(id) as ViewElement);
     }
 
+    getBinElements(x: number, y: number) {
+        const bin = this.bins.get(this.coordinatesToBin(x, y)) as Set<number>;
+        return Array.from(bin.values())
+                .map((id) => this.elements.get(id) as ViewElement);
+    }
+
     constructor(binSize: number) {
         this.binSize = binSize;
     }
@@ -151,7 +157,7 @@ export class ViewElementGrid {
         x -= e.stage.pivot.x;
         y -= e.stage.pivot.y;
 
-        const { width, height } = e.stage.getLocalBounds();
+        const { width, height } = e.bounds;
 
         return {
             x,

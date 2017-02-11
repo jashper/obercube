@@ -40,11 +40,12 @@ export class UnitElement extends ViewElement {
 
         const d = this.drawable();
         this.submarine = new PIXI.Sprite(SubmarineTextures[d.color]);
-        this.submarine.x += 20 * Math.cos(this.theta);
-        this.submarine.y += 20 * Math.sin(this.theta);
-        this.submarine.pivot.set(6, 20);
+        this.submarine.x -= 6 * Math.sin(this.theta);
+        this.submarine.y += 6 * Math.cos(this.theta);
         this.submarine.rotation -= (Math.PI / 2) - this.theta;
         this.stage.addChild(this.submarine);
+
+        this.bounds = this.stage.getLocalBounds();
     }
 
     private setCoordinates() {
@@ -53,7 +54,9 @@ export class UnitElement extends ViewElement {
         const dst = this.state().outpost.idMap.get(d.dst as number);
 
         const r = OutpostElement.radius;
-        const theta = Math.atan2(dst.y - src.y, dst.x - src.x);
+
+        let theta = Math.atan2(dst.y - src.y, dst.x - src.x);
+        theta = theta < 0 ? theta + 2 * Math.PI : theta;
 
         this.src = { x: src.x + r * (1 + Math.cos(theta)), y: src.y + r * (1 + Math.sin(theta)) };
         this.dst = { x: dst.x + r * (1 - Math.cos(theta)), y: dst.y + r * (1 - Math.sin(theta)) };
@@ -84,10 +87,11 @@ export class UnitElement extends ViewElement {
         }
 
         const d = this.drawable();
-        const { width, height } = this.submarine.getLocalBounds();
 
-        if (this.submarine.x + width >= this.dst.x - this.src.x + 20 ||
-                this.submarine.y + height >= this.dst.y - this.src.y + 20) {
+        const x = this.stage.x + this.submarine.x + 40 * Math.cos(this.theta);
+        const y = this.stage.y + this.submarine.y + 40 * Math.sin(this.theta);
+
+        if (Math.abs(x - this.dst.x) <= 1 || Math.abs(y - this.dst.y) <= 1) {
             this.dispatch(DestroyAction.unit(d.id));
             this.isDone = true;
             return;
