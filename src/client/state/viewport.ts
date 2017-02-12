@@ -195,7 +195,8 @@ function updateStage() {
     y = -grid.stage.y / scale;
 
     // expensive visibility check -> no need to run every frame, only when necessary
-    // TODO: this shouldn't be necessary -> we should only be doing this when the targets are set, not every frame
+    // TODO: this should only be done once for setPanTargets, once on zoom-out for setZoomTargets,
+    // and gradually (?) on zoom-in for setZoomTargets
     if (Math.abs(targetX - grid.stage.x) > 10 || Math.abs(targetY - grid.stage.y) > 10 ||
             Math.abs(targetScale - scale) > 10) {
         grid.update(x, y, width / scale, height / scale);

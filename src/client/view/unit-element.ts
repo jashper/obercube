@@ -27,19 +27,21 @@ export class UnitElement extends ViewElement {
         super(drawable, state, dispatch);
 
         this.setCoordinates();
+        this.stage.x = Math.min(this.src.x, this.dst.x);
+        this.stage.y = Math.min(this.src.y, this.dst.y);
 
         const line = new PIXI.Graphics();
         line.lineStyle(1, 0xFFFFFF);
 
-        line.moveTo(0, 0);
-        line.lineTo(this.dst.x - this.src.x, this.dst.y - this.src.y);
-
-        this.stage.x = this.src.x;
-        this.stage.y = this.src.y;
+        line.moveTo(this.src.x - this.stage.x, this.src.y - this.stage.y);
+        line.lineTo(this.dst.x - this.stage.x, this.dst.y - this.stage.y);
         this.stage.addChild(line);
 
         const d = this.drawable();
         this.submarine = new PIXI.Sprite(SubmarineTextures[d.color]);
+        this.submarine.x = this.src.x - this.stage.x;
+        this.submarine.y = this.src.y - this.stage.y;
+
         this.submarine.x -= 6 * Math.sin(this.theta);
         this.submarine.y += 6 * Math.cos(this.theta);
         this.submarine.rotation -= (Math.PI / 2) - this.theta;
