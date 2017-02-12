@@ -99,7 +99,7 @@ export function viewport(state: StoreRecords, action: Action<any>, dispatch: Dis
             return state.viewport;
         case SpawnActionType.SPAWN_OUTPOST:
         {
-            const id = state.outpost.lastId as number;
+            const id = state.outpost.idMap.last().id;
             const drawable = () => getState().outpost.idMap.get(id);
 
             const element = new OutpostElement(drawable, getState, dispatch);
@@ -109,7 +109,7 @@ export function viewport(state: StoreRecords, action: Action<any>, dispatch: Dis
         }
         case SpawnActionType.SPAWN_UNIT:
         {
-            const id = state.unit.lastId as number;
+            const id = state.unit.idMap.last().id;
             const drawable = () => getState().unit.idMap.get(id);
 
             const element = new UnitElement(drawable, getState, dispatch);
@@ -119,8 +119,7 @@ export function viewport(state: StoreRecords, action: Action<any>, dispatch: Dis
         }
         case DestroyActionType.DESTROY_UNIT:
         {
-            const id = state.unit.lastId as number;
-            grid.remove(id);
+            grid.remove(action.payload);
 
             return state.viewport;
         }

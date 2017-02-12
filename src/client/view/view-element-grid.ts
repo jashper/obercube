@@ -115,7 +115,7 @@ export class ViewElementGrid {
 
     insert(e: ViewElement) {
         const id = e.drawable().id;
-        const position = this.getScaledPosition(e);
+        const position = this.getPosition(e);
 
         this.stage.addChild(e.stage);
         this.elements.set(id, e);
@@ -133,7 +133,7 @@ export class ViewElementGrid {
 
     remove(id: number) {
         const e = this.elements.get(id) as ViewElement;
-        const position = this.getScaledPosition(e);
+        const position = this.getPosition(e);
 
         this.stage.removeChild(e.stage);
         this.elements.delete(id);
@@ -146,13 +146,13 @@ export class ViewElementGrid {
     }
 
     private isElementVisible(e: ViewElement) {
-        const { x, y, width, height } = this.getScaledPosition(e);
+        const { x, y, width, height } = this.getPosition(e);
 
         return !((x + width < this.x) || (this.x + this.width < x) ||
                     (y + height < this.y) || (this.y + this.height < y));
     }
 
-    private getScaledPosition(e: ViewElement): ScaledPosition {
+    private getPosition(e: ViewElement): ScaledPosition {
         let { x, y } = e.stage;
         x -= e.stage.pivot.x;
         y -= e.stage.pivot.y;

@@ -1,12 +1,14 @@
 import * as PIXI from 'pixi.js';
 
-import { Drawable } from '../actions/action';
+import { Action, Drawable } from '../actions/action';
 import { Dispatch } from '../actions/action';
 import { StoreRecords } from '../state/reducers';
 
 export abstract class ViewElement {
     stage = new PIXI.Sprite();
     bounds: PIXI.Rectangle;
+
+    protected actionQueue: Action<any>[] = [];
 
     constructor(readonly drawable: () => Drawable,
                 readonly state: () => StoreRecords,
@@ -21,5 +23,10 @@ export abstract class ViewElement {
         };
     }
 
-    abstract animate(): void;
+    animate() {
+        if (this.actionQueue.length > 0) {
+            this.actionQueue.forEach((action) => this.dispatch(action));
+            this.actionQueue = [];
+        }
+    }
 }

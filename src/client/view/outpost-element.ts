@@ -1,8 +1,8 @@
 import * as PIXI from 'pixi.js';
 
-import { Action, Dispatch, Outpost } from '../actions/action';
+import { Dispatch, Outpost } from '../actions/action';
 import Constants from '../constants';
-import { OutpostSpawnInfo, UnitSpawnInfo, SpawnAction } from '../actions/spawn';
+import { OutpostSpawnInfo, SpawnAction } from '../actions/spawn';
 import { StoreRecords } from '../state/reducers';
 import { ViewElement } from './view-element';
 
@@ -11,8 +11,6 @@ const OutpostTextures: {[key: number]: PIXI.Texture} = {};
 export class OutpostElement extends ViewElement {
     static radius = 20;
     static rotation = 3 * (Math.PI / 180);
-
-    private unitSpawnQueue: Action<UnitSpawnInfo>[] = [];
 
     constructor(readonly drawable: () => Outpost,
                 readonly state: () => StoreRecords,
@@ -69,20 +67,18 @@ export class OutpostElement extends ViewElement {
     }
 
     animate() {
-        this.stage.rotation += OutpostElement.rotation;
+        super.animate();
 
-        if (this.unitSpawnQueue.length > 0) {
-            this.unitSpawnQueue.forEach((action) => this.dispatch(action));
-            this.unitSpawnQueue = [];
-        }
+        this.stage.rotation += OutpostElement.rotation;
     }
 
+    // TODO: check to see if the click event is inside the outpost
     onClick(activeId: number) {
         const id = this.drawable().id;
         if (activeId === 0) {
             return id;
         } else if (activeId !== id) {
-            this.unitSpawnQueue.push(SpawnAction.unit({
+            this.actionQueue.push(SpawnAction.unit({
                 src: activeId,
                 dst: id,
                 color: this.state().outpost.idMap.get(activeId).color
