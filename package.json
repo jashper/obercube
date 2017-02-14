@@ -5,7 +5,8 @@
     "author": "",
     "scripts": {
         "dev": "cross-env NODE_ENV=development webpack-dev-server --open --inline --hot",
-        "build": "cross-env NODE_ENV=production webpack --progress --hide-modules"
+        "build": "cross-env NODE_ENV=production webpack --progress --hide-modules",
+        "server": "nodemon --watch src --exec 'ts-node' ./src/server/main.ts"
     },
     "repository": {
         "type": "git",
@@ -24,14 +25,19 @@
         "redux": "^3.6.0",
         "redux-devtools-extension": "^2.13.0",
         "rxjs": "^5.1.0",
-        "typed-immutable-record": "^0.0.6"
+        "typed-immutable-record": "^0.0.6",
+        "uws": "^0.12.0",
+        "winston": "^2.3.1"
     },
     "devDependencies": {
+        "@types/node": "^7.0.5",
         "@types/pixi.js": "^4.3.1",
         "@types/react": "^15.0.8",
         "@types/react-dom": "^0.14.23",
         "@types/react-redux": "^4.4.36",
         "@types/redux": "^3.6.0",
+        "@types/uws": "^0.0.0",
+        "@types/winston": "^2.2.0",
         "awesome-typescript-loader": "^3.0.4-rc.0",
         "babel-core": "^6.22.1",
         "babel-loader": "^6.2.10",
