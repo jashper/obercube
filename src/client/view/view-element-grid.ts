@@ -52,6 +52,10 @@ export class ViewElementGrid {
         this.binsPerRow = this.mapWidth / this.binSize;
 
         this.resetBins();
+
+        this.stage.children.forEach((c) => {
+            this.stage.removeChild(c);
+        });
     }
 
     private resetBins() {

@@ -1,19 +1,24 @@
 import { EventEmitter } from 'events';
+import { createStore, Store } from 'redux';
 import { Server as WebSocketServer, IServerOptions } from 'uws';
 import * as winston from 'winston';
 import { LoggerInstance } from 'winston';
 
+import { Action, Outpost } from '../action';
 import { Client } from './client';
+import Constants from '../constants';
+import { MatchAction } from './actions/match';
+import { reducers, StoreRecords } from './state/reducers';
 
 export interface ServerConfig {
     host?: string;
     port?: number;
 }
 
-let nextId = 1;
-
 export class Server extends EventEmitter {
     private logger: LoggerInstance;
+
+    private store: Store<StoreRecords>;
 
     private wssOptions: IServerOptions;
     private wss: WebSocketServer;
@@ -31,10 +36,13 @@ export class Server extends EventEmitter {
             })]
         });
 
+        this.store = createStore<StoreRecords>(reducers);
+        this.initMatch();
+
         // TODO: look into enabling + configuring wss://
         this.wssOptions = {
             host: config.host || 'localhost',
-            port: config.port || 8080,
+            port: config.port || 8081,
             verifyClient: (info, cb) => this.verifyClient(info, cb)
         };
     }
@@ -75,12 +83,12 @@ export class Server extends EventEmitter {
         this.emit('close');
     }
 
-    verifyClient(info: {}, cb: (res: boolean) => void) {
+    private verifyClient(info: {}, cb: (res: boolean) => void) {
         // const ip = info.req.socket.remoteAddress;
         cb(true);
     }
 
-    initSocket(socket: WebSocket) {
+    private initSocket(socket: WebSocket) {
         const client = this.addClient(socket);
 
         socket.onerror = (ev: ErrorEvent) => {
@@ -92,18 +100,20 @@ export class Server extends EventEmitter {
         };
 
         socket.onmessage = (ev: MessageEvent) => {
-            // this.handleMessage(ev.data, client);
+            this.handleMessage(ev.data, client);
         };
+
+        this.sendMatchState(client);
     }
 
-    closeSocket(socket: WebSocket, code: number, reason: string) {
+    private closeSocket(socket: WebSocket, code?: number, reason?: string) {
         this.logger.warn('Closing socket with code ' + code + ' and reason: ' + reason);
         socket.close(code, reason);
     }
 
-    addClient(socket: WebSocket) {
+    private addClient(socket: WebSocket) {
         // create a client object for the socket
-        const id = nextId++;
+        const id = Constants.generateId();
         const client = new Client(id, socket);
 
         this.clients.set(id, client);
@@ -112,55 +122,106 @@ export class Server extends EventEmitter {
         return client;
     }
 
-    removeClient(client: Client) {
+    private removeClient(client: Client) {
         this.clients.delete(client.id);
         this.logger.info('Removing client for id ' + client.id);
     }
 
-    // handleMessage(text: string, client: Client) {
-    //     let message;
-    //     try {
-    //         message = JSON.parse(data);
-    //     } catch (e) {
-    //         this._logger.warn('Error parsing JSON message data from ip ' + client.ip + ' : ' + e);
-    //         this._closeSocket(client.socket, closeCode.INVALID_MESSAGE_DATA.value);
-    //         return;
-    //     }
+    private handleMessage(payload: string, client: Client) {
+        this.logger.info(payload);
 
-    //     if (!message.hasOwnProperty('type')) {
-    //         this._logger.warn('Type field missing for message from ip ' + client.ip);
-    //         this._closeSocket(client.socket, closeCode.ABSENT_FIELD.value, 'type');
-    //         return;
-    //     }
-    // }
+        let message: string;
+        try {
+            message = JSON.parse(payload);
+        } catch (e) {
+            this.logger.warn('Error parsing JSON message data from id ' + client.id + ' : ' + e);
+            this.closeSocket(client.socket);
+            return;
+        }
 
-    // _sendMessage(message, client) {
-    //     // is the socket in the middle of closing (i.e. has _removeClient been called yet)
-    //     if (client.socket.readyState === 2) {
-    //         return;
-    //     }
+        // this.clients.forEach((c: Client) => {
+        //     if (c.id !== client.id) {
+        //         this.sendMessage(message, c);
+        //     }
+        // });
+    }
 
-    //     if (!message.hasOwnProperty('type')) {
-    //         this._logger.error('Type field missing for message ' + message +
-    //         ' to be sent to ip ' + client.ip);
-    //         return;
-    //     }
+    private sendAction(action: Action<any>, client: Client) {
+        // is the socket in the middle of closing (i.e. has removeClient been called yet)
+        if (client.socket.readyState === 2) {
+            return;
+        }
 
-    //     let data;
-    //     try {
-    //         data = JSON.stringify(message);
-    //     } catch (e) {
-    //         this._logger.error('Failed to stringify message ' + message +
-    //         ' to be sent to ip ' + client.ip + ': ' + e);
-    //         return;
-    //     }
+        let payload;
+        try {
+            payload = JSON.stringify(action);
+        } catch (e) {
+            this.logger.error('Failed to stringify action ' + action + ' to be sent to id ' + client.id + ': ' + e);
+            return;
+        }
 
-    //     client.socket.send(data, (error) => {
-    //         if (error) {
-    //         // TODO: is this._closeSocket() ever necessary, or is the socket always already closed?
-    //         this._logger.warn('Failed to send message to ip ' + client.ip + ' : ' + error);
-    //         return;
-    //         }
-    //     });
-    // }
+        client.socket.send(payload);
+    }
+
+    private initMatch() {
+        const min = 0;
+        const max = 8;
+
+        const width = 5000;
+        const height = 5000;
+
+        let id = 1;
+        const outposts: Outpost[] = [];
+        for (let x = 100; x < width - 100; x += 120) {
+            for (let y = 100; y < height - 100; y += 120) {
+                if (Math.random() > 0.5) {
+                    continue;
+                }
+
+                let color = 0;
+                switch (Math.ceil(Math.random() * (max - min) + min)) {
+                    case 1:
+                        color = Constants.COLORS.LAVENDER;
+                        break;
+                    case 2:
+                        color = Constants.COLORS.LIGHT_BLUE;
+                        break;
+                    case 3:
+                        color = Constants.COLORS.LIME_GREEN;
+                        break;
+                    case 4:
+                        color = Constants.COLORS.ORANGE;
+                        break;
+                    case 5:
+                        color = Constants.COLORS.RADICAL_RED;
+                        break;
+                    case 6:
+                        color = Constants.COLORS.SEAFOAM_GREEN;
+                        break;
+                    case 7:
+                        color = Constants.COLORS.TAN;
+                        break;
+                    case 8:
+                        color = Constants.COLORS.WHITE;
+                        break;
+                    default:
+                        break;
+                }
+
+                outposts.push({ id: id++, x, y, color });
+            }
+        }
+
+        this.store.dispatch(MatchAction.new({
+            mapInfo: { width, height },
+            outposts
+        }));
+    }
+
+    private sendMatchState(client: Client) {
+        const game = this.store.getState().match.games.first();
+        const action = MatchAction.state(game);
+
+        this.sendAction(action, client);
+    }
 }

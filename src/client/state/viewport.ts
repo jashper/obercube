@@ -1,8 +1,8 @@
 import { TypedRecord, makeTypedFactory } from 'typed-immutable-record';
 
-import { Action, Dispatch, Delta } from '../actions/action';
+import { Action, Dispatch, Delta } from '../../action';
 import { DestroyActionType } from '../actions/destroy';
-import { MatchActionType } from '../actions/match';
+import { MatchActionType } from '../../server/actions/match';
 import { MouseActionType } from '../actions/mouse';
 import { SpawnActionType } from '../actions/spawn';
 import { WindowActionType } from '../actions/window';
@@ -10,7 +10,7 @@ import { StoreRecords } from './reducers';
 import { ViewElementGrid } from '../view/view-element-grid';
 import { OutpostElement } from '../view/outpost-element';
 import { UnitElement } from '../view/unit-element';
-import Constants from '../constants';
+import Constants from '../../constants';
 
 interface ViewportState {
     width: number;
@@ -90,27 +90,15 @@ export function viewport(state: StoreRecords, action: Action<any>, dispatch: Dis
             return state.viewport;
         case WindowActionType.WINDOW_START_ANIMATION:
             renderer = action.payload.renderer;
-
             grid.stage = action.payload.stage;
-            grid.init(mapWidth, mapHeight);
 
             animate();
 
             return state.viewport;
-        case SpawnActionType.SPAWN_OUTPOST:
-        {
-            const id = state.outpost.idMap.last().id;
-            const drawable = () => getState().outpost.idMap.get(id);
-
-            const element = new OutpostElement(drawable, getState, dispatch);
-            grid.insert(element);
-
-            return state.viewport;
-        }
         case SpawnActionType.SPAWN_UNIT:
         {
-            const id = state.unit.idMap.last().id;
-            const drawable = () => getState().unit.idMap.get(id);
+            const id = state.game.units.last().id;
+            const drawable = () => getState().game.units.get(id);
 
             const element = new UnitElement(drawable, getState, dispatch);
             grid.insert(element);
@@ -123,9 +111,18 @@ export function viewport(state: StoreRecords, action: Action<any>, dispatch: Dis
 
             return state.viewport;
         }
-        case MatchActionType.NEW_MATCH:
-            mapWidth = action.payload.mapWidth;
-            mapHeight = action.payload.mapHeight;
+        case MatchActionType.GAME_STATE:
+            mapWidth = state.game.mapInfo.width;
+            mapHeight = state.game.mapInfo.height;
+
+            grid.init(mapWidth, mapHeight);
+
+            state.game.outposts.forEach((outpost, id) => {
+                const drawable = () => getState().game.outposts.get(id!);
+
+                const element = new OutpostElement(drawable, getState, dispatch);
+                grid.insert(element);
+            });
 
             return state.viewport;
         default:

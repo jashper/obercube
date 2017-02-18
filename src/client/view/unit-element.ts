@@ -1,9 +1,8 @@
 import * as PIXI from 'pixi.js';
 
-import { Coordinates, Dispatch, Unit } from '../actions/action';
+import { Coordinates, Dispatch, Unit } from '../../action';
 import { DestroyAction } from '../actions/destroy';
-import { UnitSpawnInfo } from '../actions/spawn';
-import Constants from '../constants';
+import Constants from '../../constants';
 import { OutpostElement } from './outpost-element';
 import { StoreRecords } from '../state/reducers';
 import { ViewElement } from './view-element';
@@ -38,7 +37,8 @@ export class UnitElement extends ViewElement {
         this.stage.addChild(line);
 
         const d = this.drawable();
-        this.submarine = new PIXI.Sprite(SubmarineTextures[d.color]);
+        const color = this.state().game.outposts.get(d.src as number).color as number;
+        this.submarine = new PIXI.Sprite(SubmarineTextures[color]);
         this.submarine.x = this.src.x - this.stage.x;
         this.submarine.y = this.src.y - this.stage.y;
 
@@ -52,8 +52,8 @@ export class UnitElement extends ViewElement {
 
     private setCoordinates() {
         const d = this.drawable();
-        const src = this.state().outpost.idMap.get(d.src as number);
-        const dst = this.state().outpost.idMap.get(d.dst as number);
+        const src = this.state().game.outposts.get(d.src as number);
+        const dst = this.state().game.outposts.get(d.dst as number);
 
         const r = OutpostElement.radius;
 
@@ -63,15 +63,6 @@ export class UnitElement extends ViewElement {
         this.src = { x: src.x + r * (1 + Math.cos(theta)), y: src.y + r * (1 + Math.sin(theta)) };
         this.dst = { x: dst.x + r * (1 - Math.cos(theta)), y: dst.y + r * (1 - Math.sin(theta)) };
         this.theta = theta;
-    }
-
-    static GENERATE_DRAWABLE(id: number, info: UnitSpawnInfo): Unit {
-        return {
-            id,
-            color: info.color,
-            src: info.src,
-            dst: info.dst
-        };
     }
 
     static GENERATE_SUBMARINE_SPRITE(color: number): PIXI.Texture {

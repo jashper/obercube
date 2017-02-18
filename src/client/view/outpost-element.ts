@@ -1,8 +1,8 @@
 import * as PIXI from 'pixi.js';
 
-import { Dispatch, Outpost } from '../actions/action';
-import Constants from '../constants';
-import { OutpostSpawnInfo, SpawnAction } from '../actions/spawn';
+import { Dispatch, Outpost } from '../../action';
+import Constants from '../../constants';
+import { SpawnAction } from '../actions/spawn';
 import { StoreRecords } from '../state/reducers';
 import { ViewElement } from './view-element';
 
@@ -21,21 +21,12 @@ export class OutpostElement extends ViewElement {
         const d = this.drawable();
         const r = OutpostElement.radius;
 
-        this.stage = new PIXI.Sprite(OutpostTextures[d.color]);
+        this.stage = new PIXI.Sprite(OutpostTextures[d.color as number]); // TODO: look up playerId's color instead
         this.stage.x = d.x + r;
         this.stage.y = d.y + r;
         this.stage.pivot.set(r, r);
 
         this.bounds = this.stage.getLocalBounds();
-    }
-
-    static GENERATE_DRAWABLE(id: number, info: OutpostSpawnInfo): Outpost {
-        return {
-            id,
-            color: info.color,
-            x: info.x,
-            y: info.y
-        };
     }
 
     static GENERATE_SPRITE(color: number): PIXI.Texture {
@@ -79,9 +70,9 @@ export class OutpostElement extends ViewElement {
             return id;
         } else if (activeId !== id) {
             this.actionQueue.push(SpawnAction.unit({
+                id: 0,
                 src: activeId,
-                dst: id,
-                color: this.state().outpost.idMap.get(activeId).color
+                dst: id
             }));
 
             return 0;

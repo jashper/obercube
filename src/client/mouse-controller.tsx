@@ -6,9 +6,9 @@ import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/operator/debounceTime';
 
-import Constants from './constants';
+import Constants from '../constants';
 import { StoreRecords } from './state/reducers';
-import { Coordinates, Dispatch, Delta } from './actions/action';
+import { Coordinates, Dispatch, Delta } from '../action';
 import { ViewportStateRecord } from './state/viewport';
 import { MouseAction } from './actions/mouse';
 import { WindowAction } from './actions/window';

@@ -4,7 +4,7 @@ import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 import 'redux-devtools-extension/developmentOnly';
 
-import { Action } from './actions/action';
+import { Action } from '../action';
 import { reducers } from './state/reducers';
 import View from './view/view';
 

@@ -7,24 +7,21 @@ import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/operator/debounceTime';
 
 import { StoreRecords } from '../state/reducers';
-import { Dispatch, Dimensions, RendererInfo} from '../actions/action';
-import { MapStateRecord } from '../state/map';
+import { Dispatch, Dimensions, RendererInfo} from '../../action';
+import { GameStateRecord } from '../state/game';
 import { WindowAction } from '../actions/window';
-import { MatchAction, MatchInfo } from '../actions/match';
-import { SpawnAction, OutpostSpawnInfo } from '../actions/spawn';
 
-import Constants from '../constants';
+import Constants from '../../constants';
 import MouseController from '../mouse-controller';
+import WebSocketController from '../web-socket-controller';
 
 interface StateProps {
-    map: MapStateRecord;
+    game: GameStateRecord;
 }
 
 interface DispatchProps {
     windowResize(dimensions: Dimensions): void;
     startAnimation(info: RendererInfo): void;
-    newMatch(info: MatchInfo): void;
-    spawnOutpost(info: OutpostSpawnInfo): void;
 }
 
 interface Props extends StateProps, DispatchProps {}
@@ -54,9 +51,6 @@ class View extends React.Component<Props, {}> {
             resolution: window.devicePixelRatio
         });
 
-        // TODO: remove this
-        this.props.newMatch({mapWidth: 5000, mapHeight: 5000 });
-
         // start the main render loop
         this.props.startAnimation({stage: this.stage, renderer: this.renderer});
 
@@ -65,61 +59,11 @@ class View extends React.Component<Props, {}> {
         this.onWindowResize();
     }
 
-    // TODO: remove this
-    componentDidUpdate(prevProps: Props, prevState: {}) {
-        const min = 0;
-        const max = 8;
-
-        // wait for the map to load
-        let canSpawn = true;
-        if (this.props.map.width !== prevProps.map.width) {
-            for (let x = 100; x < 4900; x += 120) {
-                for (let y = 100; y < 4900; y += 120) {
-                    // if (Math.random() > 0.5) {
-                    //     continue;
-                    // }
-
-                    let color = 0;
-                    switch (Math.ceil(Math.random() * (max - min) + min)) {
-                        case 1:
-                            color = Constants.COLORS.LAVENDER;
-                            break;
-                        case 2:
-                            color = Constants.COLORS.LIGHT_BLUE;
-                            break;
-                        case 3:
-                            color = Constants.COLORS.LIME_GREEN;
-                            break;
-                        case 4:
-                            color = Constants.COLORS.ORANGE;
-                            break;
-                        case 5:
-                            color = Constants.COLORS.RADICAL_RED;
-                            break;
-                        case 6:
-                            color = Constants.COLORS.SEAFOAM_GREEN;
-                            break;
-                        case 7:
-                            color = Constants.COLORS.TAN;
-                            break;
-                        case 8:
-                            color = Constants.COLORS.WHITE;
-                            break;
-                        default:
-                            break;
-                    }
-
-                    this.props.spawnOutpost({ x, y, color });
-                    canSpawn = false;
-                }
-            }
-        }
-    }
-
     render() {
         return (
             <div>
                 <MouseController />
+                <WebSocketController />
                 <canvas ref='canvas' style={{ position: 'absolute', display: 'block' }} />
             </div>
         );
@@ -148,16 +92,14 @@ class View extends React.Component<Props, {}> {
 
 function mapStateToProps(state: StoreRecords) {
     return {
-        map: state.map
+        game: state.game
     };
 }
 
 function mapDispatchToProps(dispatch: Dispatch) {
     return {
         windowResize: bindActionCreators(WindowAction.resize, dispatch),
-        startAnimation: bindActionCreators(WindowAction.startAnimation, dispatch),
-        newMatch: bindActionCreators(MatchAction.new, dispatch),
-        spawnOutpost: bindActionCreators(SpawnAction.outpost, dispatch)
+        startAnimation: bindActionCreators(WindowAction.startAnimation, dispatch)
     };
 }
 

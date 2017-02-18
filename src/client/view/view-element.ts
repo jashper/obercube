@@ -1,7 +1,6 @@
 import * as PIXI from 'pixi.js';
 
-import { Action, Drawable } from '../actions/action';
-import { Dispatch } from '../actions/action';
+import { Action, Dispatch, Drawable } from '../../action';
 import { StoreRecords } from '../state/reducers';
 
 export abstract class ViewElement {

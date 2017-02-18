@@ -9,7 +9,7 @@ enum COLORS {
     SEAFOAM_GREEN = 0x08FDCC
 }
 
-let id = 0;
+let id = 1000000;
 function generateId() {
     return ++id;
 }
@@ -21,5 +21,6 @@ export default {
     MIN_SCALE: 0.3,
     MAX_SCALE: 8,
     PAN_BOUNDARY_PIXELS: 75,
+    playerId: 1,
     ZOOM_FACTOR: 1.25
 };

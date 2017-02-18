@@ -1,4 +1,4 @@
-import { Action, Coordinates } from './action';
+import { Action, Coordinates } from '../../action';
 
 export const MouseActionType = {
     MOUSE_CLICK: 'MOUSE_CLICK',

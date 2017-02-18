@@ -1,4 +1,4 @@
-import { Action, Dimensions, RendererInfo, Delta } from './action';
+import { Action, Dimensions, RendererInfo, Delta } from '../../action';
 
 export const WindowActionType = {
     WINDOW_RESIZE: 'WINDOW_RESIZE',
