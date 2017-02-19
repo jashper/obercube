@@ -47,7 +47,7 @@ export class UnitElement extends ViewElement {
         this.submarine.rotation -= (Math.PI / 2) - this.theta;
         this.stage.addChild(this.submarine);
 
-        this.bounds = this.stage.getLocalBounds();
+        this.maxBounds = this.stage.getLocalBounds();
     }
 
     private setCoordinates() {

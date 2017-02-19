@@ -1,8 +1,8 @@
 import { TypedRecord, makeTypedFactory } from 'typed-immutable-record';
 
-import { Action, Unit } from '../../action';
+import { Action } from '../../action';
 import { SocketActionType } from '../actions/socket';
-import Constants from '../../constants';
+import { SpawnActionType } from '../actions/spawn';
 
 export interface WebSocketState {
     isOpen: boolean;
@@ -31,7 +31,7 @@ export function websocket(state: WebSocketStateRecord = defaultState(), action: 
 
 // white-list of client actions to send to the server
 const clientActions: Object = {
-    SPAWN_UNIT: 'SPAWN_UNIT'
+    ...SpawnActionType
 };
 
 function sendClientAction(action: Action<any>) {

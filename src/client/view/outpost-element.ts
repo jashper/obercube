@@ -26,7 +26,7 @@ export class OutpostElement extends ViewElement {
         this.stage.y = d.y + r;
         this.stage.pivot.set(r, r);
 
-        this.bounds = this.stage.getLocalBounds();
+        this.maxBounds = this.stage.getLocalBounds();
     }
 
     static GENERATE_SPRITE(color: number): PIXI.Texture {

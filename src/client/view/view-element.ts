@@ -5,7 +5,7 @@ import { StoreRecords } from '../state/reducers';
 
 export abstract class ViewElement {
     stage = new PIXI.Sprite();
-    bounds: PIXI.Rectangle;
+    maxBounds: PIXI.Rectangle; // IMPORTANT! this must represent the maximum bounds that stage can ever take on
 
     protected actionQueue: Action<any>[] = [];
 

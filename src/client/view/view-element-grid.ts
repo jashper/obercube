@@ -161,7 +161,7 @@ export class ViewElementGrid {
         x -= e.stage.pivot.x;
         y -= e.stage.pivot.y;
 
-        const { width, height } = e.bounds;
+        const { width, height } = e.maxBounds;
 
         return {
             x,
