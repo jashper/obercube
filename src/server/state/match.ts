@@ -1,37 +1,52 @@
-import { OrderedMap } from 'immutable';
+import { Map } from 'immutable';
 import { TypedRecord, makeTypedFactory } from 'typed-immutable-record';
 
-import { Action, Outpost } from '../../action';
-import { GameStateRecord, defaultGameState } from '../../client/state/game';
+import { Action, User } from '../../action';
 import { MatchActionType } from '../actions/match';
-import Constants from '../../constants';
+import { UserActionType } from '../actions/user';
+
+export interface Match {
+    id: number;
+    users: Set<number>; // TODO: make this immutable?
+}
 
 interface MatchState {
-    games: OrderedMap<number, GameStateRecord>;
+    idMap: Map<number, Match>;
 }
 export interface MatchStateRecord extends TypedRecord<MatchStateRecord>, MatchState {}
 
 const defaultState = makeTypedFactory<MatchState, MatchStateRecord>({
-    games: OrderedMap<number, GameStateRecord>()
+    idMap: Map<number, Match>()
 });
 
 export function match(state: MatchStateRecord = defaultState(), action: Action<any>) {
     switch (action.type) {
         case MatchActionType.NEW_MATCH:
-            const id = Constants.generateId();
-            let game = defaultGameState();
+        {
+            const id = action.payload.id;
+            const match = { id, users: new Set<number>() };
 
-            game = game.merge({
-                mapInfo: action.payload.mapInfo
-            });
+            return state.merge({ idMap: state.idMap.set(id, match) });
+        }
+        case UserActionType.JOIN_MATCH:
+        {
+            const userId = action.payload.userId;
+            const matchId = action.payload.matchId;
 
-            (action.payload.outposts as Outpost[]).forEach((o) => {
-                 game = game.merge({
-                     outposts: game.outposts.set(o.id, o)
-                 });
-            });
+            const match = state.idMap.get(matchId);
+            match.users.add(userId);
 
-            return state.merge({ games: state.games.set(id, game) });
+            return state.merge({ idMap: state.idMap.set(match.id, match) });
+        }
+        case UserActionType.USER_LOGOUT:
+        {
+            const user = action.payload as User;
+
+            const match = state.idMap.get(user.activeMatchId!);
+            match.users.delete(user.id);
+
+            return state.merge({ idMap: state.idMap.set(match.id, match) });
+        }
         default:
             return state;
     }

@@ -3,9 +3,13 @@ import * as PIXI from 'pixi.js';
 export interface Action<P> {
     type: string;
     payload: P;
+    userId?: number;
+    fromServer?: boolean; // TODO: <--- remove this, hacky workaround until we associate outposts with playerId
 }
 
-export type Dispatch = <T>(action: Action<T>) => void;
+export type Dispatch = (action: Action<any>) => Action<any>;
+
+export type Middleware<Store> = (store: Store) => (next: Dispatch) => Dispatch;
 
 export interface Coordinates {
     x: number;
@@ -43,6 +47,15 @@ export interface Unit extends DynamicDrawable {}
 export interface MapInfo {
     width: number;
     height: number;
+}
+
+export interface Player {
+    id: number;
+}
+
+export interface User {
+    id: number;
+    activeMatchId?: number;
 }
 
 export interface RendererInfo {

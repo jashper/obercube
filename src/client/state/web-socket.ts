@@ -35,12 +35,10 @@ const clientActions: Object = {
 };
 
 function sendClientAction(action: Action<any>) {
-    if (!clientActions.hasOwnProperty(action.type) || socket.readyState > 1) {
+    if (!clientActions.hasOwnProperty(action.type) || socket.readyState > 1 || action.fromServer) {
         return;
     }
 
-    // if (action.type === 'SPAWN_UNIT' && (action.payload as Unit).playerId === Constants.playerId) {
-    //     const payload = JSON.stringify(action);
-    //     socket.send(payload);
-    // }
+    const payload = JSON.stringify(action);
+    socket.send(payload);
 }

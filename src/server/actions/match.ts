@@ -2,32 +2,44 @@
 import * as transit from 'transit-immutable-js';
 const toJSON: (obj: any) => string = transit.toJSON;
 
-import { Action, MapInfo, Outpost } from '../../action';
+import { Action, MapInfo, Outpost, Player } from '../../action';
 import { GameStateRecord } from '../../client/state/game';
 
-export interface Match {
+export interface MatchSetup {
+    id: number;
     mapInfo: MapInfo;
     outposts: Outpost[];
 }
 
 export const MatchActionType = {
     GAME_STATE: 'GAME_STATE',
-    NEW_MATCH: 'NEW_MATCH'
+    NEW_MATCH: 'NEW_MATCH',
+    NEW_PLAYER: 'NEW_PLAYER'
 };
 
 export const MatchAction = {
-    new: (info: Match): Action<Match> => {
+    newMatch: (match: MatchSetup): Action<MatchSetup> => {
         return {
             type: MatchActionType.NEW_MATCH,
-            payload: info
+            payload: match
         };
     },
 
-    state: (state: GameStateRecord): Action<string> => {
+    newPlayer: (player: Player): Action<Player> => {
+        return {
+            type: MatchActionType.NEW_PLAYER,
+            payload: player
+        };
+    },
+
+    state: (playerId: number, state: GameStateRecord): Action<string> => {
         return {
             type: MatchActionType.GAME_STATE,
             payload: toJSON({
+                matchId: state.matchId,
+                playerId,
                 mapInfo: state.mapInfo,
+                players: state.players,
                 outposts: state.outposts,
                 units: state.units
             })

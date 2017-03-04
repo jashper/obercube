@@ -1,13 +1,14 @@
 import { EventEmitter } from 'events';
-import { createStore, Store } from 'redux';
+import { applyMiddleware, createStore, Store } from 'redux';
 import { Server as WebSocketServer, IServerOptions } from 'uws';
-import * as winston from 'winston';
-import { LoggerInstance } from 'winston';
+import * as logger from 'winston';
 
 import { Action, Outpost } from '../action';
 import { Client } from './client';
 import Constants from '../constants';
 import { MatchAction } from './actions/match';
+import { UserAction } from './actions/user';
+import { matchController } from './middleware/match-controller';
 import { reducers, StoreRecords } from './state/reducers';
 
 export interface ServerConfig {
@@ -15,28 +16,31 @@ export interface ServerConfig {
     port?: number;
 }
 
-export class Server extends EventEmitter {
-    private logger: LoggerInstance;
+export interface ServerStore extends Store<StoreRecords> {}
 
-    private store: Store<StoreRecords>;
+export const clients = new Map<number, Client>();
+
+export class Server extends EventEmitter {
+    private store: ServerStore;
 
     private wssOptions: IServerOptions;
     private wss: WebSocketServer;
 
     private isActive = false;
-    private clients = new Map<number, Client>();
 
     constructor(config: ServerConfig = {}) {
         super();
 
-        this.logger = new winston.Logger({
-            transports: [new winston.transports.Console({
+        logger.configure({
+            transports: [new logger.transports.Console({
                 colorize: true,
                 silent: false
             })]
         });
 
-        this.store = createStore<StoreRecords>(reducers);
+        const middleware = applyMiddleware(matchController);
+
+        this.store = createStore<StoreRecords>(reducers, middleware) as ServerStore;
         this.initMatch();
 
         // TODO: look into enabling + configuring wss://
@@ -49,7 +53,7 @@ export class Server extends EventEmitter {
 
     start() {
         if (this.isActive) {
-            this.logger.warn('Server is already started');
+            logger.warn('Server is already started');
             return;
         }
 
@@ -58,11 +62,11 @@ export class Server extends EventEmitter {
         });
 
         this.wss.on('connection', (socket) => {
-            this.initSocket((socket as any) as WebSocket);
+            this.initClient((socket as any) as WebSocket);
         });
 
         this.wss.on('error', (error) => {
-            this.logger.error('WebSocketServer: ' + error);
+            logger.error('WebSocketServer: ' + error);
             this.stop();
         });
 
@@ -71,7 +75,7 @@ export class Server extends EventEmitter {
 
     stop() {
         if (!this.isActive) {
-            this.logger.warn('Server is already stopped');
+            logger.warn('Server is already stopped');
             return;
         }
 
@@ -88,79 +92,48 @@ export class Server extends EventEmitter {
         cb(true);
     }
 
-    private initSocket(socket: WebSocket) {
+    private initClient(socket: WebSocket) {
         const client = this.addClient(socket);
-
-        socket.onerror = (ev: ErrorEvent) => {
-            this.logger.warn('Socket error ' + ev + ' for id ' + client.id);
-        };
 
         socket.onclose = (ev: CloseEvent) => {
             this.removeClient(client);
         };
-
-        socket.onmessage = (ev: MessageEvent) => {
-            this.handleMessage(ev.data, client);
-        };
-
-        this.sendMatchState(client);
-    }
-
-    private closeSocket(socket: WebSocket, code?: number, reason?: string) {
-        this.logger.warn('Closing socket with code ' + code + ' and reason: ' + reason);
-        socket.close(code, reason);
     }
 
     private addClient(socket: WebSocket) {
-        // create a client object for the socket
+        // create a Client object for the socket
         const id = Constants.generateId();
         const client = new Client(id, socket);
 
-        this.clients.set(id, client);
-        this.logger.info('Adding client for id ' + id);
+        clients.set(id, client);
+        logger.info('Adding client for id ' + id);
+
+        client.source.subscribe({
+            next: (a: Action<any>) => {
+                a.userId = id;
+                this.store.dispatch(a);
+            }
+        });
+
+        // login
+        this.store.dispatch(UserAction.login(id));
+
+        // join match
+        this.store.dispatch(UserAction.joinMatch({
+            userId: id,
+            matchId: 1
+        }));
 
         return client;
     }
 
     private removeClient(client: Client) {
-        this.clients.delete(client.id);
-        this.logger.info('Removing client for id ' + client.id);
-    }
+        clients.delete(client.id);
+        logger.info('Removing client for id ' + client.id);
 
-    private handleMessage(payload: string, client: Client) {
-        this.logger.info(payload);
-
-        let message: string;
-        try {
-            message = JSON.parse(payload);
-        } catch (e) {
-            this.logger.warn('Error parsing JSON message data from id ' + client.id + ' : ' + e);
-            this.closeSocket(client.socket);
-            return;
-        }
-
-        // this.clients.forEach((c: Client) => {
-        //     if (c.id !== client.id) {
-        //         this.sendMessage(message, c);
-        //     }
-        // });
-    }
-
-    private sendAction(action: Action<any>, client: Client) {
-        // is the socket in the middle of closing (i.e. has removeClient been called yet)
-        if (client.socket.readyState === 2) {
-            return;
-        }
-
-        let payload;
-        try {
-            payload = JSON.stringify(action);
-        } catch (e) {
-            this.logger.error('Failed to stringify action ' + action + ' to be sent to id ' + client.id + ': ' + e);
-            return;
-        }
-
-        client.socket.send(payload);
+        // logout
+        const user = this.store.getState().user.active.get(client.id);
+        this.store.dispatch(UserAction.logout(user));
     }
 
     private initMatch() {
@@ -212,16 +185,10 @@ export class Server extends EventEmitter {
             }
         }
 
-        this.store.dispatch(MatchAction.new({
+        this.store.dispatch(MatchAction.newMatch({
+            id: 1,
             mapInfo: { width, height },
             outposts
         }));
-    }
-
-    private sendMatchState(client: Client) {
-        const game = this.store.getState().match.games.first();
-        const action = MatchAction.state(game);
-
-        this.sendAction(action, client);
     }
 }

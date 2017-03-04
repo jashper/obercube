@@ -25,6 +25,7 @@ class WebSocketController extends React.Component<Props, {}> {
 
         this.socket.onmessage = (ev: MessageEvent) => {
             const action = JSON.parse(ev.data) as Action<any>;
+            action.fromServer = true;
             this.props.dispatch(action);
         };
     }

@@ -1,3 +1,4 @@
+import * as PIXI from 'pixi.js';
 import { TypedRecord, makeTypedFactory } from 'typed-immutable-record';
 
 import { Action, Dispatch, Delta } from '../../action';

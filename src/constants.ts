@@ -9,7 +9,7 @@ enum COLORS {
     SEAFOAM_GREEN = 0x08FDCC
 }
 
-let id = 1000000;
+let id = 10000; // TODO: fix - currently like this to avoid outpost + unit id overlap
 function generateId() {
     return ++id;
 }
@@ -21,6 +21,5 @@ export default {
     MIN_SCALE: 0.3,
     MAX_SCALE: 8,
     PAN_BOUNDARY_PIXELS: 75,
-    playerId: 1,
     ZOOM_FACTOR: 1.25
 };
