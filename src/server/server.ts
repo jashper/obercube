@@ -5,11 +5,11 @@ import * as logger from 'winston';
 
 import { Action, Outpost } from '../action';
 import { Client } from './client';
-import Constants from '../constants';
 import { MatchAction } from './actions/match';
 import { UserAction } from './actions/user';
 import { matchController } from './middleware/match-controller';
 import { reducers, StoreRecords } from './state/reducers';
+import IdGenerator from '../id-generator';
 
 export interface ServerConfig {
     host?: string;
@@ -18,6 +18,7 @@ export interface ServerConfig {
 
 export interface ServerStore extends Store<StoreRecords> {}
 
+let clientId = 0;
 export const clients = new Map<number, Client>();
 
 export class Server extends EventEmitter {
@@ -102,7 +103,7 @@ export class Server extends EventEmitter {
 
     private addClient(socket: WebSocket) {
         // create a Client object for the socket
-        const id = Constants.generateId();
+        const id = ++clientId;
         const client = new Client(id, socket);
 
         clients.set(id, client);
@@ -140,10 +141,11 @@ export class Server extends EventEmitter {
         const min = 0;
         const max = 8;
 
+        IdGenerator.Init(0, max);
+
         const width = 5000;
         const height = 5000;
 
-        let id = 1;
         const outposts: Outpost[] = [];
         for (let x = 100; x < width - 100; x += 120) {
             for (let y = 100; y < height - 100; y += 120) {
@@ -152,7 +154,7 @@ export class Server extends EventEmitter {
                 }
 
                 const playerId = Math.ceil(Math.random() * (max - min) + min);
-                outposts.push({ id: id++, x, y, playerId });
+                outposts.push({ id: IdGenerator.Next(), x, y, playerId });
             }
         }
 

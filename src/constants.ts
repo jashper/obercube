@@ -9,7 +9,7 @@ enum COLORS {
     SEAFOAM_GREEN = 0x08FDCC
 }
 
-// maps a playerId to a unique color to represent the player's drawables
+// maps each available playerId to a unique color to represent the player's drawables
 const COLOR_MAP = new Map<number, number>();
 Object.keys(COLORS)
     .map(k => COLORS[k as any])
@@ -18,16 +18,10 @@ Object.keys(COLORS)
         COLOR_MAP.set(idx + 1, value as any);
     });
 
-let id = 10000; // TODO: fix - currently like this to avoid outpost + unit id overlap
-function generateId() {
-    return ++id;
-}
-
 export default {
     BACKGROUND_COLOR: 0x222222,
     COLORS,
     COLOR_MAP,
-    generateId,
     MIN_SCALE: 0.3,
     MAX_SCALE: 8,
     PAN_BOUNDARY_PIXELS: 75,

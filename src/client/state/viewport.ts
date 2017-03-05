@@ -12,6 +12,7 @@ import { ViewElementGrid } from '../view/view-element-grid';
 import { OutpostElement } from '../view/outpost-element';
 import { UnitElement } from '../view/unit-element';
 import Constants from '../../constants';
+import IdGenerator from '../../id-generator';
 
 interface ViewportState {
     width: number;
@@ -113,6 +114,8 @@ export function viewport(state: StoreRecords, action: Action<any>, dispatch: Dis
             return state.viewport;
         }
         case MatchActionType.GAME_STATE:
+            IdGenerator.Init(state.game.playerId, 8);
+
             mapWidth = state.game.mapInfo.width;
             mapHeight = state.game.mapInfo.height;
 
