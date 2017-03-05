@@ -21,7 +21,8 @@ export class OutpostElement extends ViewElement {
         const d = this.drawable();
         const r = OutpostElement.radius;
 
-        this.stage = new PIXI.Sprite(OutpostTextures[d.color as number]); // TODO: look up playerId's color instead
+        const color = Constants.COLOR_MAP.get(d.playerId)!;
+        this.stage = new PIXI.Sprite(OutpostTextures[color]);
         this.stage.x = d.x + r;
         this.stage.y = d.y + r;
         this.stage.pivot.set(r, r);

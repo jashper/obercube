@@ -37,7 +37,9 @@ export class UnitElement extends ViewElement {
         this.stage.addChild(line);
 
         const d = this.drawable();
-        const color = this.state().game.outposts.get(d.src as number).color as number;
+        const playerId = this.state().game.outposts.get(d.src as number).playerId;
+        const color = Constants.COLOR_MAP.get(playerId)!;
+
         this.submarine = new PIXI.Sprite(SubmarineTextures[color]);
         this.submarine.x = this.src.x - this.stage.x;
         this.submarine.y = this.src.y - this.stage.y;

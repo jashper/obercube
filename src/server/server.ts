@@ -151,37 +151,8 @@ export class Server extends EventEmitter {
                     continue;
                 }
 
-                let color = 0;
-                switch (Math.ceil(Math.random() * (max - min) + min)) {
-                    case 1:
-                        color = Constants.COLORS.LAVENDER;
-                        break;
-                    case 2:
-                        color = Constants.COLORS.LIGHT_BLUE;
-                        break;
-                    case 3:
-                        color = Constants.COLORS.LIME_GREEN;
-                        break;
-                    case 4:
-                        color = Constants.COLORS.ORANGE;
-                        break;
-                    case 5:
-                        color = Constants.COLORS.RADICAL_RED;
-                        break;
-                    case 6:
-                        color = Constants.COLORS.SEAFOAM_GREEN;
-                        break;
-                    case 7:
-                        color = Constants.COLORS.TAN;
-                        break;
-                    case 8:
-                        color = Constants.COLORS.WHITE;
-                        break;
-                    default:
-                        break;
-                }
-
-                outposts.push({ id: id++, x, y, color });
+                const playerId = Math.ceil(Math.random() * (max - min) + min);
+                outposts.push({ id: id++, x, y, playerId });
             }
         }
 
