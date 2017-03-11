@@ -60,6 +60,7 @@ export const matchController: Middleware<ServerStore> = store => next => action 
             const matchId = store.getState().user.active.get(userId)!.activeMatchId!;
             const gameStore = stores.get(matchId)!;
 
+            // TODO: uncomment this dispatch after we implement cleaning up upon unit destruction
             // gameStore.dispatch(action);
 
             // TODO: only send to clients in the match

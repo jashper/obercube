@@ -48,7 +48,7 @@ export function game(state: GameStateRecord = defaultGameState(), action: Action
             return state.merge({
                 players: state.players.set(player.id, player)
             });
-        case MatchActionType.NEW_MATCH:
+        case MatchActionType.NEW_MATCH: // for initializing server-based stores of game state
             const id = action.payload.id;
 
             let game = defaultGameState();
