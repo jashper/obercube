@@ -34,7 +34,7 @@ let mapWidth: number;
 let mapHeight: number;
 
 let activeElementId = 0;
-const grid = new ViewElementGrid(25);
+const grid = new ViewElementGrid(1000);
 let renderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer;
 
 let x = 0;
@@ -85,7 +85,11 @@ export function viewport(state: StoreRecords, action: Action<any>, dispatch: Dis
             const elements = grid.getBinElements(localPt.x, localPt.y);
             elements.forEach((e) => {
                 if (e instanceof OutpostElement) {
-                    activeElementId = e.onClick(activeElementId);
+                    const d = e.drawable();
+                    if (localPt.x >= d.x && localPt.y >= d.y &&
+                            localPt.x <= d.x + e.maxBounds.width && localPt.y <= d.y + e.maxBounds.height) {
+                        activeElementId = e.onClick(activeElementId);
+                    }
                 }
             });
 
@@ -194,11 +198,8 @@ function updateStage() {
     x = -grid.stage.x / scale;
     y = -grid.stage.y / scale;
 
-    // expensive visibility check -> no need to run every frame, only when necessary
-    // TODO: this should only be done once for setPanTargets, once on zoom-out for setZoomTargets,
-    // and gradually (?) on zoom-in for setZoomTargets
-    if (Math.abs(targetX - grid.stage.x) > 10 || Math.abs(targetY - grid.stage.y) > 10 ||
-            Math.abs(targetScale - scale) > 10) {
+    if (Math.abs(targetX - grid.stage.x) > 1 || Math.abs(targetY - grid.stage.y) > 1 ||
+            Math.abs(targetScale - scale) > 1) {
         grid.update(x, y, width / scale, height / scale);
     }
 }
