@@ -1,21 +1,20 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import { composeWithDevTools } from 'redux-devtools-extension/developmentOnly';
 import { Provider } from 'react-redux';
-import { createStore } from 'redux';
-import 'redux-devtools-extension/developmentOnly';
+import { applyMiddleware, createStore } from 'redux';
 
-import { Action } from '../action';
+import { viewportController } from './middleware/viewport-controller';
 import { reducers } from './state/reducers';
 import View from './view/view';
 
-const store = createStore((reducers as any), (window as any).__REDUX_DEVTOOLS_EXTENSION__({
-    actionsBlacklist: []
-}));
+const middleware = applyMiddleware(viewportController);
 
-// hacky way to allow the viewport to dispatch further async actions; this
-// is needed for allowing animations to trigger further actions such as unit cleanup
-const newReducers = (state: {}, action: Action<any>) => reducers(state, action, store.dispatch);
-store.replaceReducer(newReducers);
+const composeEnhancers = composeWithDevTools({
+    actionsBlacklist: []
+});
+
+const store = createStore(reducers, composeEnhancers(middleware));
 
 ReactDOM.render(
     <Provider store={store}>

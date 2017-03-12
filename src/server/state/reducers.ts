@@ -1,4 +1,4 @@
-import { combineReducers } from 'redux';
+import { combineReducers, Store } from 'redux';
 
 import { match, MatchStateRecord } from './match';
 import { user, UserStateRecord } from './user';
@@ -12,3 +12,5 @@ export interface StoreRecords {
     match: MatchStateRecord;
     user: UserStateRecord;
 }
+
+export interface ServerStore extends Store<StoreRecords> {}

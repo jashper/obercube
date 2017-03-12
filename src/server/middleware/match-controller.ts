@@ -2,11 +2,12 @@ import { createStore, combineReducers, Store } from 'redux';
 import * as logger from 'winston';
 
 import { Middleware, Player } from '../../action';
-import { clients, ServerStore } from '../server';
+import { clients } from '../server';
 import { game, GameStateRecord } from '../../client/state/game';
 import { MatchAction, MatchActionType } from '../actions/match';
 import { UserActionType } from '../actions/user';
 import { SpawnActionType } from '../../client/actions/spawn';
+import { ServerStore } from '../state/reducers';
 
 interface GameRecord { game: GameStateRecord; }
 

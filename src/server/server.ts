@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { applyMiddleware, createStore, Store } from 'redux';
+import { applyMiddleware, createStore } from 'redux';
 import { Server as WebSocketServer, IServerOptions } from 'uws';
 import * as logger from 'winston';
 
@@ -8,15 +8,13 @@ import { Client } from './client';
 import { MatchAction } from './actions/match';
 import { UserAction } from './actions/user';
 import { matchController } from './middleware/match-controller';
-import { reducers, StoreRecords } from './state/reducers';
+import { reducers, StoreRecords, ServerStore } from './state/reducers';
 import IdGenerator from '../id-generator';
 
 export interface ServerConfig {
     host?: string;
     port?: number;
 }
-
-export interface ServerStore extends Store<StoreRecords> {}
 
 let clientId = 0;
 export const clients = new Map<number, Client>();

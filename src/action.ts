@@ -4,7 +4,7 @@ export interface Action<P> {
     type: string;
     payload: P;
     userId?: number;
-    fromServer?: boolean; // TODO: <--- remove this, hacky workaround until we associate outposts with playerId
+    fromServer?: boolean;
 }
 
 export type Dispatch = (action: Action<any>) => Action<any>;

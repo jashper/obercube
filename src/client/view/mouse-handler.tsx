@@ -6,12 +6,12 @@ import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/operator/debounceTime';
 
-import Constants from '../constants';
-import { StoreRecords } from './state/reducers';
-import { Coordinates, Dispatch, Delta } from '../action';
-import { ViewportStateRecord } from './state/viewport';
-import { MouseAction } from './actions/mouse';
-import { WindowAction } from './actions/window';
+import Constants from '../../constants';
+import { StoreRecords } from '../state/reducers';
+import { Coordinates, Dispatch, Delta } from '../../action';
+import { ViewportStateRecord } from '../state/viewport';
+import { MouseAction } from '../actions/mouse';
+import { WindowAction } from '../actions/window';
 
 interface StateProps {
     viewport: ViewportStateRecord;
@@ -26,7 +26,7 @@ interface DispatchProps {
 
 interface Props extends StateProps, DispatchProps {}
 
-class MouseController extends React.Component<Props, {}> {
+class MouseHandler extends React.Component<Props, {}> {
     isPanning = false;
     panDelta: Delta = { dx: 0, dy: 0 };
 
@@ -112,4 +112,4 @@ function mapDispatchToProps(dispatch: Dispatch) {
     };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(MouseController as any);
+export default connect(mapStateToProps, mapDispatchToProps)(MouseHandler as any);

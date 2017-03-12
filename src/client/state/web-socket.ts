@@ -35,7 +35,7 @@ const clientActions: Object = {
 };
 
 function sendClientAction(action: Action<any>) {
-    if (!clientActions.hasOwnProperty(action.type) || socket.readyState > 1 || action.fromServer) {
+    if (!clientActions.hasOwnProperty(action.type) || action.fromServer || socket.readyState > 1) {
         return;
     }
 
