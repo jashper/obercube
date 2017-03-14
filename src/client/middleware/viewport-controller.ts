@@ -127,7 +127,7 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
         default:
             return result;
     }
-}
+};
 
 function animate() {
     if (isPanning) {

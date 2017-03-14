@@ -1,33 +1,22 @@
-import { TypedRecord, makeTypedFactory } from 'typed-immutable-record';
-
-import { Action } from '../../action';
+import { Action, Middleware } from '../../action';
 import { SocketActionType } from '../actions/socket';
 import { SpawnActionType } from '../actions/spawn';
-
-export interface WebSocketState {
-    isOpen: boolean;
-}
-export interface WebSocketStateRecord extends TypedRecord<WebSocketStateRecord>, WebSocketState {}
-
-const defaultState = makeTypedFactory<WebSocketState, WebSocketStateRecord>({
-    isOpen: false
-});
+import { ClientStore } from '../state/reducers';
 
 let socket: WebSocket;
 
-export function websocket(state: WebSocketStateRecord = defaultState(), action: Action<any>) {
+export const webSocketController: Middleware<ClientStore> = store => next => action => {
+    const result = next(action);
+
     switch (action.type) {
         case SocketActionType.SOCKET_OPEN:
             socket = action.payload;
-
-            return state.merge({
-                isOpen: true
-            });
+            return result;
         default:
             sendClientAction(action);
-            return state;
+            return result;
     }
-}
+};
 
 // white-list of client actions to send to the server
 const clientActions: Object = {

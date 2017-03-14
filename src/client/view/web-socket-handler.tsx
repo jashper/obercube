@@ -2,9 +2,9 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
-import { StoreRecords } from './state/reducers';
-import { Action, Dispatch } from '../action';
-import { SocketAction } from './actions/socket';
+import { StoreRecords } from '../state/reducers';
+import { Action, Dispatch } from '../../action';
+import { SocketAction } from '../actions/socket';
 
 interface StateProps {}
 
@@ -15,7 +15,7 @@ interface DispatchProps {
 
 interface Props extends StateProps, DispatchProps {}
 
-class WebSocketController extends React.Component<Props, {}> {
+class WebSocketHandler extends React.Component<Props, {}> {
     private socket: WebSocket;
 
     componentDidMount() {
@@ -46,4 +46,4 @@ function mapDispatchToProps(dispatch: Dispatch) {
     };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(WebSocketController as any);
+export default connect(mapStateToProps, mapDispatchToProps)(WebSocketHandler as any);

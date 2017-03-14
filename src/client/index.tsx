@@ -5,10 +5,14 @@ import { Provider } from 'react-redux';
 import { applyMiddleware, createStore } from 'redux';
 
 import { viewportController } from './middleware/viewport-controller';
+import { webSocketController } from './middleware/web-socket-controller';
 import { reducers } from './state/reducers';
 import View from './view/view';
 
-const middleware = applyMiddleware(viewportController);
+const middleware = applyMiddleware(
+    webSocketController,
+    viewportController
+);
 
 const composeEnhancers = composeWithDevTools({
     actionsBlacklist: []

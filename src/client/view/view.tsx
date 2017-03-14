@@ -13,7 +13,7 @@ import { WindowAction } from '../actions/window';
 
 import Constants from '../../constants';
 import MouseHandler from './mouse-handler';
-import WebSocketController from '../web-socket-controller';
+import WebSocketHandler from './web-socket-handler';
 
 interface StateProps {
     game: GameStateRecord;
@@ -63,7 +63,7 @@ class View extends React.Component<Props, {}> {
         return (
             <div>
                 <MouseHandler />
-                <WebSocketController />
+                <WebSocketHandler />
                 <canvas ref='canvas' style={{ position: 'absolute', display: 'block' }} />
             </div>
         );
