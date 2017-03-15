@@ -4,6 +4,7 @@ import { Dispatch, Outpost } from '../../action';
 import Constants from '../../constants';
 import { SpawnAction } from '../actions/spawn';
 import { StoreRecords } from '../state/reducers';
+import { UnitElement } from './unit-element';
 import { ViewElement } from './view-element';
 
 const OutpostTextures: {[key: number]: PIXI.Texture} = {};
@@ -58,22 +59,26 @@ export class OutpostElement extends ViewElement {
         return circle.generateCanvasTexture();
     }
 
-    animate() {
-        super.animate();
+    animate(tick: number) {
+        super.animate(tick);
 
         this.stage.rotation += OutpostElement.rotation;
     }
 
-    // TODO: check to see if the click event is inside the outpost
-    onClick(activeId: number) {
+    onClick(activeId: number, tick: number) {
         const id = this.drawable().id;
         if (activeId === 0) {
             return id;
         } else if (activeId !== id) {
+            const src = this.state().game.outposts.get(activeId);
+            const dst = this.state().game.outposts.get(id);
+
             this.actionQueue.push(SpawnAction.unit({
                 id: 0,
-                src: activeId,
-                dst: id
+                src: src.id,
+                dst: dst.id,
+                startTick: tick,
+                endTick: UnitElement.GET_END_TICK(src, dst, tick)
             }));
 
             return 0;

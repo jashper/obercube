@@ -2,25 +2,21 @@ import * as logger from 'winston';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import { Subscriber } from 'rxjs/Subscriber';
+import { Subscription } from 'rxjs/Subscription';
 
 import { Action } from '../action';
 
 export class Client {
-    get source(): Observable<Action<any>> {
+    get src(): Observable<Action<any>> {
         return this.publisher.asObservable();
     }
 
-    // !IMPORTANT! - any subscriptions made with this Subscriber must be disposed
-    // when the Client's socket closes (i.e. when the player logs out) -- otherwise
-    // memory leaks will occur
-    get sink(): Subscriber<Action<any>> {
-        return this.subscriber;
-    }
+    private dst = new Subscriber<Action<any>>({
+        next: this.send.bind(this)
+    });
 
     private publisher = new Subject<Action<any>>();
-    private subscriber = new Subscriber<Action<any>>({
-        next: this.sendAction.bind(this)
-    });
+    private subscriptions: Subscription[] = [];
 
     constructor(readonly id: number, readonly socket: WebSocket) {
         socket.onmessage = (ev: MessageEvent) => {
@@ -35,7 +31,32 @@ export class Client {
         // otherwise onerror needs to complete the publisher as well
         socket.onclose = (ev: CloseEvent) => {
             this.publisher.complete();
+            this.subscriptions.forEach(s => s.unsubscribe());
         };
+    }
+
+    send(action: Action<any>) {
+        // is the socket in the middle of closing or already closed
+        if (this.socket.readyState >= 2) {
+            return;
+        }
+
+        let payload;
+        try {
+            payload = JSON.stringify(action);
+        } catch (e) {
+            logger.error('Failed to stringify action ' + action + ' to be sent to id ' + this.id + ': ' + e);
+            return;
+        }
+
+        this.socket.send(payload);
+    }
+
+    subscribe(src: Observable<Action<any>>): Subscription {
+        const s = src.subscribe(this.dst);
+        this.subscriptions.push(s);
+
+        return s;
     }
 
     disconnect(code?: number, reason?: string) {
@@ -56,22 +77,5 @@ export class Client {
         // TODO: assert the existence of type + payload properties -> otherwise throw
 
         this.publisher.next(action);
-    }
-
-    private sendAction(action: Action<any>) {
-        // is the socket in the middle of closing or already closed
-        if (this.socket.readyState >= 2) {
-            return;
-        }
-
-        let payload;
-        try {
-            payload = JSON.stringify(action);
-        } catch (e) {
-            logger.error('Failed to stringify action ' + action + ' to be sent to id ' + this.id + ': ' + e);
-            return;
-        }
-
-        this.socket.send(payload);
     }
 }

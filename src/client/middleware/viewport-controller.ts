@@ -1,8 +1,11 @@
 import * as PIXI from 'pixi.js';
+import { Subscription } from 'rxjs/Subscription';
 
 import { Delta, Middleware } from '../../action';
-import { DestroyActionType } from '../actions/destroy';
+import { DestroyAction, DestroyActionType } from '../actions/destroy';
 import { MatchActionType } from '../../server/actions/match';
+import { GameTickEngine } from '../../game-tick-engine';
+import { GameTickActionType } from '../../server/actions/game-tick';
 import { MouseActionType } from '../actions/mouse';
 import { SpawnActionType } from '../actions/spawn';
 import { WindowActionType } from '../actions/window';
@@ -17,6 +20,9 @@ let storeState: StoreRecords;
 function getState(): StoreRecords {
     return storeState;
 }
+
+const engine = new GameTickEngine();
+let engineSub: Subscription;
 
 let mapWidth: number;
 let mapHeight: number;
@@ -47,6 +53,13 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
     storeState = state;
 
     switch (action.type) {
+        case GameTickActionType.START_TICK:
+            engineSub = engine.src.subscribe((a) => store.dispatch(a));
+            engine.start(Constants.GAME_TICK_DELTA, action.payload);
+            return result;
+        case GameTickActionType.QUEUE_EVENT:
+            engine.queueEvent(action.payload);
+            return result;
         case WindowActionType.WINDOW_RESIZE:
             width = action.payload.width;
             height = action.payload.height;
@@ -79,7 +92,7 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
                     const d = e.drawable();
                     if (localPt.x >= d.x && localPt.y >= d.y &&
                             localPt.x <= d.x + e.maxBounds.width && localPt.y <= d.y + e.maxBounds.height) {
-                        activeElementId = e.onClick(activeElementId);
+                        activeElementId = e.onClick(activeElementId, engine.getTick());
                     }
                 }
             });
@@ -99,6 +112,12 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
 
             const element = new UnitElement(drawable, getState, store.dispatch);
             grid.insert(element);
+
+            engine.queueEvent({
+                trigger: drawable().endTick,
+                interval: 0,
+                action: () => DestroyAction.unit(id)
+            });
 
             return result;
         }
@@ -136,7 +155,7 @@ function animate() {
 
     updateStage();
 
-    grid.activeElements.forEach((e) => e.animate());
+    grid.activeElements.forEach((e) => e.animate(engine.getTick()));
     renderer.render(grid.stage);
 
     requestAnimationFrame(animate);

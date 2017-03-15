@@ -107,7 +107,7 @@ export class Server extends EventEmitter {
         clients.set(id, client);
         logger.info('Adding client for id ' + id);
 
-        client.source.subscribe({
+        client.src.subscribe({
             next: (a: Action<any>) => {
                 a.userId = id;
                 this.store.dispatch(a);

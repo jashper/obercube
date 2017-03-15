@@ -22,7 +22,7 @@ export abstract class ViewElement {
         };
     }
 
-    animate() {
+    animate(tick: number) {
         if (this.actionQueue.length > 0) {
             this.actionQueue.forEach((action) => this.dispatch(action));
             this.actionQueue = [];

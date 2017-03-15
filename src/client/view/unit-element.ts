@@ -1,7 +1,6 @@
 import * as PIXI from 'pixi.js';
 
-import { Coordinates, Dispatch, Unit } from '../../action';
-import { DestroyAction } from '../actions/destroy';
+import { Coordinates, Dispatch, Unit, Outpost } from '../../action';
 import Constants from '../../constants';
 import { OutpostElement } from './outpost-element';
 import { StoreRecords } from '../state/reducers';
@@ -9,15 +8,27 @@ import { ViewElement } from './view-element';
 
 const SubmarineTextures: {[key: number]: PIXI.Texture} = {};
 
+interface LineInfo {
+    theta: number;
+    src: Coordinates;
+    dst: Coordinates;
+    stage: Coordinates;
+}
+
+interface SubmarineInfo {
+    src: Coordinates;
+    dst: Coordinates;
+    rotation: number;
+}
+
 export class UnitElement extends ViewElement {
-    static speed = 0.75;
+    static speed = 1; // distance / tick
+    private prevTick = 0;
+
+    private lineInfo: LineInfo;
+    private subInfo: SubmarineInfo;
 
     private submarine: PIXI.Sprite;
-
-    private isDone = false;
-    private src: Coordinates;
-    private dst: Coordinates;
-    private theta: number;
 
     constructor(readonly drawable: () => Unit,
                 readonly state: () => StoreRecords,
@@ -25,46 +36,83 @@ export class UnitElement extends ViewElement {
     ) {
         super(drawable, state, dispatch);
 
-        this.setCoordinates();
-        this.stage.x = Math.min(this.src.x, this.dst.x);
-        this.stage.y = Math.min(this.src.y, this.dst.y);
+        const d = this.drawable();
+        const src = this.state().game.outposts.get(d.src as number);
+        const dst = this.state().game.outposts.get(d.dst as number);
+
+        this.lineInfo = UnitElement.getLineInfo(src, dst);
+        this.stage.x = this.lineInfo.stage.x;
+        this.stage.y = this.lineInfo.stage.y;
 
         const line = new PIXI.Graphics();
         line.lineStyle(1, 0xFFFFFF);
 
-        line.moveTo(this.src.x - this.stage.x, this.src.y - this.stage.y);
-        line.lineTo(this.dst.x - this.stage.x, this.dst.y - this.stage.y);
+        line.moveTo(this.lineInfo.src.x - this.stage.x, this.lineInfo.src.y - this.stage.y);
+        line.lineTo(this.lineInfo.dst.x - this.stage.x, this.lineInfo.dst.y - this.stage.y);
         this.stage.addChild(line);
 
-        const d = this.drawable();
         const playerId = this.state().game.outposts.get(d.src as number).playerId;
         const color = Constants.COLOR_MAP.get(playerId)!;
-
         this.submarine = new PIXI.Sprite(SubmarineTextures[color]);
-        this.submarine.x = this.src.x - this.stage.x;
-        this.submarine.y = this.src.y - this.stage.y;
 
-        this.submarine.x -= 6 * Math.sin(this.theta);
-        this.submarine.y += 6 * Math.cos(this.theta);
-        this.submarine.rotation -= (Math.PI / 2) - this.theta;
+        this.subInfo = UnitElement.getSubmarineInfo(this.lineInfo);
+        this.submarine.x = this.subInfo.src.x;
+        this.submarine.y = this.subInfo.src.y;
+        this.submarine.rotation = this.subInfo.rotation;
         this.stage.addChild(this.submarine);
 
         this.maxBounds = this.stage.getLocalBounds();
     }
 
-    private setCoordinates() {
-        const d = this.drawable();
-        const src = this.state().game.outposts.get(d.src as number);
-        const dst = this.state().game.outposts.get(d.dst as number);
+    static GET_END_TICK(src: Outpost, dst: Outpost, startTick: number): number {
+        const lineInfo = UnitElement.getLineInfo(src, dst);
+        const subInfo = UnitElement.getSubmarineInfo(lineInfo);
 
+        const distance = Math.sqrt(
+            Math.pow((subInfo.src.x - subInfo.dst.x), 2) +
+            Math.pow((subInfo.src.y - subInfo.dst.y), 2)
+        );
+        return startTick + (distance / UnitElement.speed) + 1;
+    }
+
+    private static getLineInfo(src: Outpost, dst: Outpost): LineInfo {
         const r = OutpostElement.radius;
 
         let theta = Math.atan2(dst.y - src.y, dst.x - src.x);
         theta = theta < 0 ? theta + 2 * Math.PI : theta;
 
-        this.src = { x: src.x + r * (1 + Math.cos(theta)), y: src.y + r * (1 + Math.sin(theta)) };
-        this.dst = { x: dst.x + r * (1 - Math.cos(theta)), y: dst.y + r * (1 - Math.sin(theta)) };
-        this.theta = theta;
+        const srcLine = {
+            x: src.x + r * (1 + Math.cos(theta)),
+            y: src.y + r * (1 + Math.sin(theta))
+        };
+
+        const dstLine = {
+            x: dst.x + r * (1 - Math.cos(theta)),
+            y: dst.y + r * (1 - Math.sin(theta))
+        };
+
+        const stage = {
+            x: Math.min(src.x, dst.x),
+            y: Math.min(src.y, dst.y)
+        };
+
+        return { theta, src: srcLine, dst: dstLine, stage };
+    }
+
+    private static getSubmarineInfo(lineInfo: LineInfo): SubmarineInfo {
+        const src = {
+            x: lineInfo.src.x - lineInfo.stage.x - 6 * Math.sin(lineInfo.theta),
+            y: lineInfo.src.y - lineInfo.stage.y + 6 * Math.cos(lineInfo.theta)
+        };
+
+        const dst = {
+            x: Math.abs(lineInfo.dst.x - lineInfo.stage.x - 40 * Math.cos(lineInfo.theta)),
+            y: Math.abs(lineInfo.dst.y - lineInfo.stage.y - 40 * Math.sin(lineInfo.theta))
+        };
+
+        const rotation = lineInfo.theta - (Math.PI / 2);
+
+        return { src, dst, rotation };
     }
 
     static GENERATE_SUBMARINE_SPRITE(color: number): PIXI.Texture {
@@ -76,24 +124,19 @@ export class UnitElement extends ViewElement {
         return ellipse.generateCanvasTexture();
     }
 
-    animate() {
-        if (this.isDone) {
-            return;
-        }
-
+    animate(tick: number) {
         const d = this.drawable();
 
-        const x = this.stage.x + this.submarine.x + 40 * Math.cos(this.theta);
-        const y = this.stage.y + this.submarine.y + 40 * Math.sin(this.theta);
-
-        if (Math.abs(x - this.dst.x) <= 1 || Math.abs(y - this.dst.y) <= 1) {
-            this.dispatch(DestroyAction.unit(d.id));
-            this.isDone = true;
+        // TODO: make this some sort of pending "back-and-forth" animation
+        if (d.endTick === 0) {
             return;
         }
 
-        this.submarine.x += UnitElement.speed * Math.cos(this.theta);
-        this.submarine.y += UnitElement.speed * Math.sin(this.theta);
+        const delta = Math.min(tick, d.endTick) - Math.min(d.endTick, Math.max(this.prevTick, d.startTick));
+        this.submarine.x += delta * UnitElement.speed * Math.cos(this.lineInfo.theta);
+        this.submarine.y += delta * UnitElement.speed * Math.sin(this.lineInfo.theta);
+
+        this.prevTick = tick;
     }
 }
 

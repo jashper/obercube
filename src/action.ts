@@ -38,6 +38,8 @@ export interface DynamicDrawable extends Drawable {
     // top-left corner coordinates or ids of other drawables
     src: Coordinates | number; // where it starts
     dst: Coordinates | number; // where it ends
+    startTick: number; // 0 if needs to be set by server
+    endTick: number; // 0 if needs to be set by server
 }
 
 export interface Outpost extends StaticDrawable {
