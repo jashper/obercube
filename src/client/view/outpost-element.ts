@@ -4,13 +4,11 @@ import { Dispatch, Outpost } from '../../action';
 import Constants from '../../constants';
 import { SpawnAction } from '../actions/spawn';
 import { StoreRecords } from '../state/reducers';
-import { UnitElement } from './unit-element';
 import { ViewElement } from './view-element';
 
 const OutpostTextures: {[key: number]: PIXI.Texture} = {};
 
 export class OutpostElement extends ViewElement {
-    static radius = 20;
     static rotation = 3 * (Math.PI / 180);
 
     constructor(readonly drawable: () => Outpost,
@@ -20,7 +18,7 @@ export class OutpostElement extends ViewElement {
         super(drawable, state, dispatch);
 
         const d = this.drawable();
-        const r = OutpostElement.radius;
+        const r = Constants.OUTPOST_RADIUS;
 
         const color = Constants.COLOR_MAP.get(d.playerId)!;
         this.stage = new PIXI.Sprite(OutpostTextures[color]);
@@ -32,7 +30,7 @@ export class OutpostElement extends ViewElement {
     }
 
     static GENERATE_SPRITE(color: number): PIXI.Texture {
-        const r = OutpostElement.radius;
+        const r = Constants.OUTPOST_RADIUS;
 
         const circle = new PIXI.Graphics();
         circle.beginFill(color);
@@ -70,15 +68,12 @@ export class OutpostElement extends ViewElement {
         if (activeId === 0) {
             return id;
         } else if (activeId !== id) {
-            const src = this.state().game.outposts.get(activeId);
-            const dst = this.state().game.outposts.get(id);
-
             this.actionQueue.push(SpawnAction.unit({
                 id: 0,
-                src: src.id,
-                dst: dst.id,
-                startTick: tick,
-                endTick: UnitElement.GET_END_TICK(src, dst, tick)
+                src: activeId,
+                dst: id,
+                startTick: 0,
+                endTick: 0
             }));
 
             return 0;

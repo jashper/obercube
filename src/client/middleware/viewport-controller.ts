@@ -57,6 +57,9 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
             engineSub = engine.src.subscribe((a) => store.dispatch(a));
             engine.start(Constants.GAME_TICK_DELTA, action.payload);
             return result;
+        case GameTickActionType.SYNCHRONIZE_TICK:
+            engine.sync(action.payload);
+            return result;
         case GameTickActionType.QUEUE_EVENT:
             engine.queueEvent(action.payload);
             return result;
@@ -110,14 +113,19 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
             const id = state.game.units.last().id;
             const drawable = () => getState().game.units.get(id);
 
-            const element = new UnitElement(drawable, getState, store.dispatch);
-            grid.insert(element);
+            if (!grid.getElement(id)) {
+                const element = new UnitElement(drawable, getState, store.dispatch);
+                grid.insert(element);
+            }
 
-            engine.queueEvent({
-                trigger: drawable().endTick,
-                interval: 0,
-                action: () => DestroyAction.unit(id)
-            });
+            const endTick = drawable().endTick;
+            if (endTick > 0) {
+                engine.queueEvent({
+                    trigger: endTick,
+                    interval: 0,
+                    action: () => DestroyAction.unit(id)
+                });
+            }
 
             return result;
         }
@@ -140,6 +148,19 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
 
                 const element = new OutpostElement(drawable, getState, store.dispatch);
                 grid.insert(element);
+            });
+
+            state.game.units.forEach((unit, id) => {
+                const drawable = () => getState().game.units.get(id!);
+
+                const element = new UnitElement(drawable, getState, store.dispatch);
+                grid.insert(element);
+
+                engine.queueEvent({
+                    trigger: drawable().endTick,
+                    interval: 0,
+                    action: () => DestroyAction.unit(id!)
+                });
             });
 
             return result;

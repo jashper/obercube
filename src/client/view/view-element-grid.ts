@@ -36,6 +36,10 @@ export class ViewElementGrid {
                 .map((id) => this.elements.get(id) as ViewElement);
     }
 
+    getElement(id: number): ViewElement | undefined {
+        return this.elements.get(id);
+    }
+
     getBinElements(x: number, y: number) {
         const bin = this.bins.get(this.coordinatesToBin(x, y)) as Set<number>;
         return Array.from(bin.values())

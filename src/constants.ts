@@ -22,9 +22,10 @@ export default {
     BACKGROUND_COLOR: 0x222222,
     COLORS,
     COLOR_MAP,
-    GAME_TICK_DELTA: 10, // milliseconds
+    GAME_TICK_DELTA: (1 / 60) * 1000, // milliseconds
     MIN_SCALE: 0.3,
     MAX_SCALE: 8,
+    OUTPOST_RADIUS: 20,
     PAN_BOUNDARY_PIXELS: 75,
     ZOOM_FACTOR: 1.25
 };

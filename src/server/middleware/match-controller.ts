@@ -4,21 +4,32 @@ import * as logger from 'winston';
 
 import { Action, Middleware, Player } from '../../action';
 import Constants from '../../constants';
-import { GameTickEngine }  from '../../game-tick-engine';
+import { GameTickEngine } from '../../game-tick-engine';
 import { clients } from '../server';
 import { game, GameStateRecord } from '../../client/state/game';
 import { MatchAction, MatchActionType } from '../actions/match';
-import { GameTickAction } from '../actions/game-tick';
+import { GameTickAction, GameTickActionType } from '../actions/game-tick';
 import { UserActionType } from '../actions/user';
+import { DestroyAction } from '../../client/actions/destroy';
 import { SpawnActionType } from '../../client/actions/spawn';
+import { UnitElementInfo } from '../../client/view/unit-element-info';
 import { ServerStore } from '../state/reducers';
 
 interface GameRecord { game: GameStateRecord; }
 
-// TODO: condense these into one map (i.e. create a GameInfo interface)
-const stores = new Map<number, Store<GameRecord>>();
-const tickEngines = new Map<number, GameTickEngine>();
-const publishers = new Map<number, Subject<Action<any>>>();
+interface MatchInfo {
+    store: Store<GameRecord>;
+    engine: GameTickEngine;
+    publisher: Subject<Action<any>>;
+}
+
+const matches = new Map<number, MatchInfo>();
+
+// white-list of queued actions to publish to all clients in a match;
+// otherwise they get dispatched to the store
+const publishActions: Object = {
+    SYNCHRONIZE_TICK: GameTickActionType.SYNCHRONIZE_TICK
+};
 
 let playerId = 0; // TODO: <--- remove
 
@@ -34,12 +45,29 @@ export const matchController: Middleware<ServerStore> = store => next => action 
 
             gameStore.dispatch(action);
 
-            stores.set(matchId, gameStore);
-            publishers.set(matchId, new Subject());
-
             const engine = new GameTickEngine();
-            engine.start(Constants.GAME_TICK_DELTA);
-            tickEngines.set(matchId, engine);
+            engine.start(Constants.GAME_TICK_DELTA - 1); // the server needs to run slightly faster for the client to not be behind
+
+            const publisher = new Subject();
+            engine.src.subscribe(a => {
+                if (publishActions.hasOwnProperty(a.type)) {
+                    publisher.next(a);
+                } else {
+                    gameStore.dispatch(a);
+                }
+            });
+
+            engine.queueEvent({
+                trigger: engine.getTick(),
+                interval: 65, // ~ every 1 sec -- given the engine's period
+                action: (tick: number) => GameTickAction.synchronize(tick)
+            });
+
+            matches.set(matchId, {
+                store: gameStore,
+                engine,
+                publisher
+            });
 
             return result;
         }
@@ -47,27 +75,24 @@ export const matchController: Middleware<ServerStore> = store => next => action 
         {
             const userId = action.payload.userId;
             const matchId = action.payload.matchId;
+            const match = matches.get(matchId)!;
 
             const player: Player = {
                 id: (++playerId <= 8) ? playerId : 1
             };
 
-            const gameStore = stores.get(matchId)!;
-            const pub = publishers.get(matchId)!;
-            const engine = tickEngines.get(matchId)!;
-
             const gameAction = MatchAction.newPlayer(player);
-            gameStore.dispatch(gameAction);
-            pub.next(gameAction);
+            match.store.dispatch(gameAction);
+            match.publisher.next(gameAction);
 
             // send game state to the new player
             const client = clients.get(userId)!;
-            const gameState = gameStore.getState().game;
-            client.send(GameTickAction.start(engine.getTick()));
+            const gameState = match.store.getState().game;
+            client.send(GameTickAction.start(match.engine.getTick()));
             client.send(MatchAction.state(player.id, gameState));
 
             // subscribe the new player to all future game actions
-            client.subscribe(pub.asObservable());
+            client.subscribe(match.publisher.asObservable());
 
             return result;
         }
@@ -75,19 +100,24 @@ export const matchController: Middleware<ServerStore> = store => next => action 
         {
             const userId = action.userId!;
             const matchId = store.getState().user.active.get(userId)!.activeMatchId!;
-            const gameStore = stores.get(matchId)!;
+            const match = matches.get(matchId)!;
 
             // TODO: verify that this is a valid action for the requesting player
 
-            // TODO: uncomment this dispatch after we implement cleaning up upon unit destruction
-            // gameStore.dispatch(action);
+            // TODO: generalize injecting ticks / removing sensitive properties like userId
+            const tick = match.engine.getTick();
+            action.payload.startTick = tick;
+            action.payload.endTick = UnitElementInfo.GET_END_TICK(action.payload, match.store.getState().game, tick);
+            delete action.userId;
 
-            // TODO: only send to clients in the match
-            clients.forEach((c) => {
-                if (c.id !== userId) {
-                    c.send(action);
-                }
+            match.store.dispatch(action);
+            match.engine.queueEvent({
+                trigger: action.payload.endTick,
+                interval: 0,
+                action: () => DestroyAction.unit(action.payload.id)
             });
+
+            match.publisher.next(action);
 
             return result;
         }

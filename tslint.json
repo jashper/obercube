@@ -23,6 +23,13 @@
     "no-increment-decrement": false,
     "prefer-type-cast": false,
     "no-suspicious-comment": false,
-    "one-variable-per-declaration": [false]
+    "one-variable-per-declaration": [false],
+    "typedef": [false],
+    "member-ordering": [false],
+    "no-parameter-properties": false,
+    "no-stateless-class": false,
+    "max-func-body-length": false,
+    "no-empty-interface": false,
+    "prefer-method-signature": false
   }
 }
