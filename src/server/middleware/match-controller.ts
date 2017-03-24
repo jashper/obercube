@@ -26,7 +26,7 @@ interface MatchInfo {
 const matches = new Map<number, MatchInfo>();
 
 // white-list of queued actions to publish to all clients in a match;
-// otherwise they get dispatched to the store
+// otherwise they get dispatched to the game's store
 const publishActions: Object = {
     SYNCHRONIZE_TICK: GameTickActionType.SYNCHRONIZE_TICK
 };
@@ -46,15 +46,15 @@ export const matchController: Middleware<ServerStore> = store => next => action 
             gameStore.dispatch(action);
 
             const engine = new GameTickEngine();
-            engine.start(Constants.GAME_TICK_DELTA - 1); // the server needs to run slightly faster for the client to not be behind
+            engine.start(Constants.GAME_TICK_DELTA - 2); // the server needs to run slightly faster for the client to not be too far ahead
 
             const publisher = new Subject();
             engine.src.subscribe(a => {
                 if (publishActions.hasOwnProperty(a.type)) {
                     publisher.next(a);
-                } else {
-                    gameStore.dispatch(a);
                 }
+
+                gameStore.dispatch(a);
             });
 
             engine.queueEvent({
@@ -88,7 +88,7 @@ export const matchController: Middleware<ServerStore> = store => next => action 
             // send game state to the new player
             const client = clients.get(userId)!;
             const gameState = match.store.getState().game;
-            client.send(GameTickAction.start(match.engine.getTick()));
+            client.send(GameTickAction.start(match.engine.getTick() + 10)); // TODO: remove this constant
             client.send(MatchAction.state(player.id, gameState));
 
             // subscribe the new player to all future game actions

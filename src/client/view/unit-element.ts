@@ -72,7 +72,7 @@ export class UnitElement extends ViewElement {
         }
 
         // determine how far along the submarine is from where it started
-        const delta = Math.min(this.adjustTick(tick), d.endTick) - d.startTick; // cap at the end of motion
+        const delta = this.getDelta(tick);
 
         const { x, y } = this.subInfo.src;
         this.submarine.x = x + delta * UnitElementInfo.speed * Math.cos(this.lineInfo.theta);

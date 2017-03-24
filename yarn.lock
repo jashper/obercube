@@ -37,9 +37,9 @@
   dependencies:
     "@types/node" "*"
 
-"@types/winston@^2.2.0":
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/@types/winston/-/winston-2.2.0.tgz#3ca062f1cb8bb5fbcc30d450d5621b57a6e9d42b"
+"@types/winston@^2.3.0":
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/@types/winston/-/winston-2.3.0.tgz#c9f9e60774c73639f61762768dcc2afffac9cb43"
   dependencies:
     "@types/node" "*"
 
@@ -2979,9 +2979,9 @@ pixi-gl-core@^1.0.3:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/pixi-gl-core/-/pixi-gl-core-1.1.0.tgz#a52cb4dd3254f9c7857a0e9c2356b00e6ec0c761"
 
-pixi.js@^4.4.2:
-  version "4.4.2"
-  resolved "https://registry.yarnpkg.com/pixi.js/-/pixi.js-4.4.2.tgz#67580bdd8eb246c227745b8882da0fb1e5197715"
+pixi.js@^4.4.3:
+  version "4.4.3"
+  resolved "https://registry.yarnpkg.com/pixi.js/-/pixi.js-4.4.3.tgz#941a237f9aa3ce3539216db71cc46a0a6113dba1"
   dependencies:
     bit-twiddle "^1.0.2"
     earcut "^2.0.7"
@@ -4169,9 +4169,9 @@ uuid@^3.0.0:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.0.1.tgz#6544bba2dfda8c1cf17e629a3a305e2bb1fee6c1"
 
-uws@^0.13.0:
-  version "0.13.0"
-  resolved "https://registry.yarnpkg.com/uws/-/uws-0.13.0.tgz#09fedbb9f9eb074de4feaec5b8b10b3ffdd4f707"
+uws@^0.14.0:
+  version "0.14.0"
+  resolved "https://registry.yarnpkg.com/uws/-/uws-0.14.0.tgz#4f90cfc22dbc4f5bf1a490cde377e840786f3192"
 
 validate-npm-package-license@^3.0.1:
   version "3.0.1"
