@@ -18,14 +18,23 @@ Object.keys(COLORS)
         COLOR_MAP.set(idx + 1, value as any);
     });
 
+const GAME_TICK_DELTA = (1 / 60) * 1000; // milliseconds
+
+// convert time in milliseconds to an equivalent amount of ticks
+function DeltaToTicks(delta: number) {
+    return Math.round(delta / GAME_TICK_DELTA);
+}
+
 export default {
     BACKGROUND_COLOR: 0x222222,
     COLORS,
     COLOR_MAP,
-    GAME_TICK_DELTA: (1 / 60) * 1000, // milliseconds
+    DeltaToTicks,
+    GAME_TICK_DELTA,
     MIN_SCALE: 0.3,
     MAX_SCALE: 8,
     OUTPOST_RADIUS: 20,
+    OUTPOST_TEXT_BUFFER: 15,
     PAN_BOUNDARY_PIXELS: 75,
     ZOOM_FACTOR: 1.25
 };

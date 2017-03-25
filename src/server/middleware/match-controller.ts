@@ -9,6 +9,7 @@ import { clients } from '../server';
 import { game, GameStateRecord } from '../../client/state/game';
 import { MatchAction, MatchActionType } from '../actions/match';
 import { GameTickAction, GameTickActionType } from '../actions/game-tick';
+import { GenerateAction, GenerateActionType } from '../actions/generate';
 import { UserActionType } from '../actions/user';
 import { DestroyAction } from '../../client/actions/destroy';
 import { SpawnActionType } from '../../client/actions/spawn';
@@ -28,7 +29,8 @@ const matches = new Map<number, MatchInfo>();
 // white-list of queued actions to publish to all clients in a match;
 // otherwise they get dispatched to the game's store
 const publishActions: Object = {
-    SYNCHRONIZE_TICK: GameTickActionType.SYNCHRONIZE_TICK
+    SYNCHRONIZE_TICK: GameTickActionType.SYNCHRONIZE_TICK,
+    GENERATE_UNITS: GenerateActionType.GENERATE_UNITS
 };
 
 let playerId = 0; // TODO: <--- remove
@@ -46,7 +48,7 @@ export const matchController: Middleware<ServerStore> = store => next => action 
             gameStore.dispatch(action);
 
             const engine = new GameTickEngine();
-            engine.start(Constants.GAME_TICK_DELTA - 2); // the server needs to run slightly faster for the client to not be too far ahead
+            engine.start(Constants.GAME_TICK_DELTA - 1); // the server needs to run slightly faster for the client to not be too far ahead
 
             const publisher = new Subject();
             engine.src.subscribe(a => {
@@ -57,10 +59,17 @@ export const matchController: Middleware<ServerStore> = store => next => action 
                 gameStore.dispatch(a);
             });
 
+            // queue up periodic events to be sent to all clients
             engine.queueEvent({
                 trigger: engine.getTick(),
-                interval: 65, // ~ every 1 sec -- given the engine's period
+                interval: Constants.DeltaToTicks(1000), // ~ every 1 sec
                 action: (tick: number) => GameTickAction.synchronize(tick)
+            });
+
+            engine.queueEvent({
+                trigger: engine.getTick(),
+                interval: Constants.DeltaToTicks(1000),
+                action: () => GenerateAction.units()
             });
 
             matches.set(matchId, {

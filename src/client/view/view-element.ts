@@ -4,7 +4,7 @@ import { Action, Dispatch, Drawable, DynamicDrawable } from '../../action';
 import { StoreRecords } from '../state/reducers';
 
 export abstract class ViewElement {
-    stage = new PIXI.Sprite();
+    stage = new PIXI.Container();
     maxBounds: PIXI.Rectangle; // IMPORTANT! this must represent the maximum bounds that stage can ever take on
 
     protected actionQueue: Action<any>[] = [];

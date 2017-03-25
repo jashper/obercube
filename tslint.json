@@ -30,6 +30,7 @@
     "no-stateless-class": false,
     "max-func-body-length": false,
     "no-empty-interface": false,
-    "prefer-method-signature": false
+    "prefer-method-signature": false,
+    "function-name": false
   }
 }

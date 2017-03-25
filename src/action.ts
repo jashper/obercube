@@ -44,6 +44,7 @@ export interface DynamicDrawable extends Drawable {
 
 export interface Outpost extends StaticDrawable {
     playerId: number; // id of player that currently owns/occupies the Outpost
+    unitCount: number;
 }
 
 export interface Unit extends DynamicDrawable {}

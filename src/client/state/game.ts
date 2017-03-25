@@ -8,6 +8,7 @@ const fromJSON: (json: any) => any = transit.fromJSON;
 import { Action, MapInfo, Outpost, Unit, Player } from '../../action';
 import { DestroyActionType } from '../actions/destroy';
 import { SpawnActionType } from '../actions/spawn';
+import { GenerateActionType } from '../../server/actions/generate';
 import { MatchActionType } from '../../server/actions/match';
 
 interface GameState {
@@ -43,6 +44,16 @@ export function game(state: GameStateRecord = defaultGameState(), action: Action
             return state.merge({
                 units: state.units.remove(action.payload)
             });
+        case GenerateActionType.GENERATE_UNITS:
+            state.outposts.forEach((o: Outpost) => {
+                o.unitCount++;
+
+                state = state.merge({
+                    outposts: state.outposts.set(o.id, o)
+                });
+            });
+
+            return state;
         case MatchActionType.NEW_PLAYER:
             const player = action.payload as Player;
             return state.merge({
@@ -58,9 +69,9 @@ export function game(state: GameStateRecord = defaultGameState(), action: Action
             });
 
             (action.payload.outposts as Outpost[]).forEach((o) => {
-                 game = game.merge({
-                     outposts: game.outposts.set(o.id, o)
-                 });
+                game = game.merge({
+                    outposts: game.outposts.set(o.id, o)
+                });
             });
 
             return game;

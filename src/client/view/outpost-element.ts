@@ -11,6 +11,15 @@ const OutpostTextures: {[key: number]: PIXI.Texture} = {};
 export class OutpostElement extends ViewElement {
     static rotation = 3 * (Math.PI / 180);
 
+    private outpost: PIXI.Sprite;
+    private unitLabel: PIXI.Text;
+
+    static unitLabelStyle = new PIXI.TextStyle({
+        fontFamily: 'Arial',
+        fontSize: 14,
+        fill: '#ffffff'
+    })
+
     constructor(readonly drawable: () => Outpost,
                 readonly state: () => StoreRecords,
                 readonly dispatch: Dispatch
@@ -20,11 +29,20 @@ export class OutpostElement extends ViewElement {
         const d = this.drawable();
         const r = Constants.OUTPOST_RADIUS;
 
+        this.stage.x = d.x;
+        this.stage.y = d.y;
+
         const color = Constants.COLOR_MAP.get(d.playerId)!;
-        this.stage = new PIXI.Sprite(OutpostTextures[color]);
-        this.stage.x = d.x + r;
-        this.stage.y = d.y + r;
-        this.stage.pivot.set(r, r);
+        this.outpost = new PIXI.Sprite(OutpostTextures[color]);
+        this.outpost.x += r;
+        this.outpost.y += r + Constants.OUTPOST_TEXT_BUFFER;
+        this.outpost.pivot.set(r, r);
+        this.stage.addChild(this.outpost);
+
+        this.unitLabel = new PIXI.Text(`${drawable().unitCount}`, OutpostElement.unitLabelStyle);
+        this.unitLabel.x += 20;
+        this.unitLabel.anchor.set(0.5);
+        this.stage.addChild(this.unitLabel);
 
         this.maxBounds = this.stage.getLocalBounds();
     }
@@ -60,7 +78,8 @@ export class OutpostElement extends ViewElement {
     animate(tick: number) {
         super.animate(tick);
 
-        this.stage.rotation += OutpostElement.rotation;
+        this.outpost.rotation += OutpostElement.rotation;
+        this.unitLabel.text = `${this.drawable().unitCount}`;
     }
 
     onClick(activeId: number, tick: number) {

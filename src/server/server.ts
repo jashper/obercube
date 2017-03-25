@@ -152,7 +152,7 @@ export class Server extends EventEmitter {
                 }
 
                 const playerId = Math.ceil(Math.random() * (max - min) + min);
-                outposts.push({ id: IdGenerator.Next(), x, y, playerId });
+                outposts.push({ id: IdGenerator.Next(), x, y, playerId, unitCount: 0 });
             }
         }
 

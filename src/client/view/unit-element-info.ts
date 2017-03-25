@@ -40,12 +40,12 @@ export class UnitElementInfo {
 
         const srcLine = {
             x: src.x + r * (1 + Math.cos(theta)),
-            y: src.y + r * (1 + Math.sin(theta))
+            y: src.y + r * (1 + Math.sin(theta)) + Constants.OUTPOST_TEXT_BUFFER
         };
 
         const dstLine = {
             x: dst.x + r * (1 - Math.cos(theta)),
-            y: dst.y + r * (1 - Math.sin(theta))
+            y: dst.y + r * (1 - Math.sin(theta)) + Constants.OUTPOST_TEXT_BUFFER
         };
 
         const stage = {
