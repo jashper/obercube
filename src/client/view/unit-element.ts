@@ -79,9 +79,8 @@ export class UnitElement extends ViewElement {
         this.submarine.y = y + delta * UnitElementInfo.speed * Math.sin(this.lineInfo.theta);
 
         // check to see if the submarine has reached the end of its motion;
-        // mark as complete for now, in anticipation of the game-tick-engine dispatching DESTROY_UNIT => the
-        // dispatch may occur before the following condition is met, if the client's clock is behind the server's clock
-        if (delta === d.endTick - d.startTick) {
+        // mark as complete for now, in anticipation of the game-tick-engine dispatching DESTROY_UNIT
+        if (delta === (d.endTick - d.startTick)) {
             this.isCompleted = true;
         }
     }

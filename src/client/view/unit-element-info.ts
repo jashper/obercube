@@ -29,7 +29,7 @@ export class UnitElementInfo {
             Math.pow((subInfo.src.x - subInfo.dst.x), 2) +
             Math.pow((subInfo.src.y - subInfo.dst.y), 2)
         );
-        return startTick + (distance / UnitElementInfo.speed) + 1;
+        return Math.ceil(startTick + (distance / UnitElementInfo.speed) + 1);
     }
 
     static GET_LINE_INFO(src: Outpost, dst: Outpost): LineInfo {

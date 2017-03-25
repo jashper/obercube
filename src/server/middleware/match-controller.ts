@@ -47,8 +47,9 @@ export const matchController: Middleware<ServerStore> = store => next => action 
 
             gameStore.dispatch(action);
 
+            // the server needs to run slightly faster for the client to not be too far ahead
             const engine = new GameTickEngine();
-            engine.start(Constants.GAME_TICK_DELTA - 1); // the server needs to run slightly faster for the client to not be too far ahead
+            engine.start(0, Constants.GAME_TICK_DELTA - 1);
 
             const publisher = new Subject();
             engine.src.subscribe(a => {
@@ -61,13 +62,13 @@ export const matchController: Middleware<ServerStore> = store => next => action 
 
             // queue up periodic events to be sent to all clients
             engine.queueEvent({
-                trigger: engine.getTick(),
+                trigger: engine.tick,
                 interval: Constants.DeltaToTicks(1000), // ~ every 1 sec
                 action: (tick: number) => GameTickAction.synchronize(tick)
             });
 
             engine.queueEvent({
-                trigger: engine.getTick(),
+                trigger: engine.tick,
                 interval: Constants.DeltaToTicks(1000),
                 action: () => GenerateAction.units()
             });
@@ -97,7 +98,7 @@ export const matchController: Middleware<ServerStore> = store => next => action 
             // send game state to the new player
             const client = clients.get(userId)!;
             const gameState = match.store.getState().game;
-            client.send(GameTickAction.start(match.engine.getTick() + 10)); // TODO: remove this constant
+            client.send(GameTickAction.start(match.engine.tick + 10)); // TODO: remove this constant
             client.send(MatchAction.state(player.id, gameState));
 
             // subscribe the new player to all future game actions
@@ -114,7 +115,7 @@ export const matchController: Middleware<ServerStore> = store => next => action 
             // TODO: verify that this is a valid action for the requesting player
 
             // TODO: generalize injecting ticks / removing sensitive properties like userId
-            const tick = match.engine.getTick();
+            const tick = match.engine.tick;
             action.payload.startTick = tick;
             action.payload.endTick = UnitElementInfo.GET_END_TICK(action.payload, match.store.getState().game, tick);
             delete action.userId;

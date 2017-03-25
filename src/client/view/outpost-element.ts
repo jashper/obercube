@@ -18,7 +18,7 @@ export class OutpostElement extends ViewElement {
         fontFamily: 'Arial',
         fontSize: 14,
         fill: '#ffffff'
-    })
+    });
 
     constructor(readonly drawable: () => Outpost,
                 readonly state: () => StoreRecords,

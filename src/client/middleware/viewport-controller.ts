@@ -55,7 +55,7 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
     switch (action.type) {
         case GameTickActionType.START_TICK:
             engineSub = engine.src.subscribe((a) => store.dispatch(a));
-            engine.start(Constants.GAME_TICK_DELTA, action.payload);
+            engine.start(action.payload);
             return result;
         case GameTickActionType.SYNCHRONIZE_TICK:
             engine.sync(action.payload);
@@ -95,7 +95,7 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
                     const d = e.drawable();
                     if (localPt.x >= d.x && localPt.y >= d.y &&
                             localPt.x <= d.x + e.maxBounds.width && localPt.y <= d.y + e.maxBounds.height) {
-                        activeElementId = e.onClick(activeElementId, engine.getTick());
+                        activeElementId = e.onClick(activeElementId, engine.tick);
                     }
                 }
             });
@@ -143,15 +143,15 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
 
             grid.init(mapWidth, mapHeight);
 
-            state.game.outposts.forEach((outpost, id) => {
-                const drawable = () => getState().game.outposts.get(id!);
+            state.game.outposts.forEach((outpost, id: number) => {
+                const drawable = () => getState().game.outposts.get(id);
 
                 const element = new OutpostElement(drawable, getState, store.dispatch);
                 grid.insert(element);
             });
 
-            state.game.units.forEach((unit, id) => {
-                const drawable = () => getState().game.units.get(id!);
+            state.game.units.forEach((unit, id: number) => {
+                const drawable = () => getState().game.units.get(id);
 
                 const element = new UnitElement(drawable, getState, store.dispatch);
                 grid.insert(element);
@@ -159,7 +159,7 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
                 engine.queueEvent({
                     trigger: drawable().endTick,
                     interval: 0,
-                    action: () => DestroyAction.unit(id!)
+                    action: () => DestroyAction.unit(id)
                 });
             });
 
@@ -176,8 +176,10 @@ function animate() {
 
     updateStage();
 
-    grid.activeElements.forEach((e) => e.animate(engine.getTick()));
+    grid.activeElements.forEach((e) => e.animate(engine.tick));
     renderer.render(grid.stage);
+
+    engine.increment();
 
     requestAnimationFrame(animate);
 }

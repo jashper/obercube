@@ -13,11 +13,11 @@ export interface GameTickEvent {
 }
 
 export class GameTickEngine {
-    getTick() {
-        return this.tick;
+    get tick() {
+        return this.prevTick;
     }
 
-    private tick: number;
+    private prevTick: number;
     private queue = new FastPriorityQueue((a: GameTickEvent, b: GameTickEvent) => a.trigger < b.trigger);
 
     private timer: Subscription;
@@ -27,13 +27,12 @@ export class GameTickEngine {
     }
     private publisher = new Subject<Action<any>>();
 
-    start(period: number, tick: number = 0) {
-        this.tick = tick;
+    start(tick: number, period?: number) {
+        this.prevTick = tick;
 
-        this.timer = Observable.timer(0, period).subscribe(() => {
-            this.tick++;
-            this.process();
-        });
+        if (period) {
+            this.timer = Observable.timer(0, period).subscribe(() => this.increment());
+        }
     }
 
     stop() {
@@ -41,8 +40,13 @@ export class GameTickEngine {
         this.publisher.complete();
     }
 
+    increment() {
+        this.prevTick++;
+        this.process();
+    }
+
     sync(tick: number) {
-        this.tick = tick;
+        this.prevTick = tick;
         this.process();
     }
 
@@ -51,10 +55,10 @@ export class GameTickEngine {
     }
 
     private process() {
-        while (this.queue.peek() && this.queue.peek().trigger <= this.tick) {
+        while (this.queue.peek() && this.queue.peek().trigger <= this.prevTick) {
             const event = this.queue.poll() as GameTickEvent;
 
-            const action = event.action(this.tick);
+            const action = event.action(this.prevTick);
             this.publisher.next(action);
 
             if (event.interval > 0) {

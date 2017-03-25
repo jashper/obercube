@@ -32,17 +32,19 @@ export abstract class ViewElement {
         }
     }
 
-    // allow for a certain amount of phase lag relative to the server's clock;
+    // figures out how far along the drawable is in it's motion;
     // only ever called when the drawable is a DynamicDrawable (i.e. it has a start and end tick)
     protected getDelta(tick: number): number {
         const d = this.drawable() as DynamicDrawable;
 
-        if (Math.abs(tick - this.prevTick) <= 5) {
+        // allows for continuous motion (i.e. ignore the tick engine when it's slightly out of sync with the server)
+        if (Math.abs(tick - this.prevTick) <= 2) {
             this.delta++;
         } else {
-            this.delta = Math.min(tick, d.endTick) - d.startTick; // cap at the end of motion
+            this.delta = tick - d.startTick;
         }
 
+        this.delta = Math.min(this.delta, d.endTick - d.startTick); // cap at the end of motion
         this.prevTick = tick;
 
         return this.delta;
