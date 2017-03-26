@@ -7,13 +7,15 @@ import { StoreRecords } from '../state/reducers';
 import { ViewElement } from './view-element';
 
 const OutpostTextures: {[key: number]: PIXI.Texture} = {};
+const UnitCountTextures: {[key: number]: PIXI.Texture} = {};
 
 export class OutpostElement extends ViewElement {
     static rotation = 3 * (Math.PI / 180);
 
     private outpost: PIXI.Sprite;
-    private unitLabel: PIXI.Text;
 
+    private prevUnitCount = 0;
+    private unitLabel: PIXI.Sprite;
     static unitLabelStyle = new PIXI.TextStyle({
         fontFamily: 'Arial',
         fontSize: 14,
@@ -37,12 +39,10 @@ export class OutpostElement extends ViewElement {
         this.outpost.x += r;
         this.outpost.y += r + Constants.OUTPOST_TEXT_BUFFER;
         this.outpost.pivot.set(r, r);
+        this.outpost.cacheAsBitmap = true;
         this.stage.addChild(this.outpost);
 
-        this.unitLabel = new PIXI.Text(`${drawable().unitCount}`, OutpostElement.unitLabelStyle);
-        this.unitLabel.x += 20;
-        this.unitLabel.anchor.set(0.5);
-        this.stage.addChild(this.unitLabel);
+        this.addUnitLabel(d.unitCount);
 
         this.maxBounds = this.stage.getLocalBounds();
     }
@@ -79,7 +79,12 @@ export class OutpostElement extends ViewElement {
         super.animate(tick);
 
         this.outpost.rotation += OutpostElement.rotation;
-        this.unitLabel.text = `${this.drawable().unitCount}`;
+
+        const unitCount = this.drawable().unitCount;
+        if (unitCount !== this.prevUnitCount) {
+            this.stage.removeChild(this.unitLabel);
+            this.addUnitLabel(unitCount);
+        }
     }
 
     onClick(activeId: number, tick: number) {
@@ -100,9 +105,33 @@ export class OutpostElement extends ViewElement {
             return activeId;
         }
     }
+
+    private addUnitLabel(count: number) {
+        this.unitLabel = new PIXI.Sprite(UnitCountTextures[count]);
+        this.unitLabel.x += 20;
+        this.unitLabel.anchor.set(0.5);
+
+        this.prevUnitCount = count;
+        this.stage.addChild(this.unitLabel);
+    }
 }
 
 Object.keys(Constants.COLORS).filter(k => typeof k === 'string').forEach(k => {
     const color: number = (Constants.COLORS[k as any] as any);
     OutpostTextures[color] = OutpostElement.GENERATE_SPRITE(color);
 });
+
+
+// TODO: !!! remove everything below, and use pre-rendered font textures instead !!!
+
+const tempCanvas = new PIXI.CanvasRenderer();
+const tempStage = new PIXI.Container();
+
+for (let i = 0; i < 1000; ++i) {
+    const tempText = new PIXI.Text(`${i}`, OutpostElement.unitLabelStyle);
+
+    tempStage.addChild(tempText);
+    tempCanvas.render(tempStage);
+
+    UnitCountTextures[i] =  tempText.texture;
+}

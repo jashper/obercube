@@ -99,7 +99,7 @@ export class ViewElementGrid {
         newBins.forEach((bin) => {
             (this.bins.get(bin) as Set<number>).forEach((id) => {
                 const e = this.elements.get(id) as ViewElement;
-                if (this.isElementVisible(e)) {
+                if (this.isElementVisible(e) && !e.stage.visible) {
                     e.stage.visible = true;
                     this.visibleElements.add(id);
                 }

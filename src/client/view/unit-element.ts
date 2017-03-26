@@ -45,6 +45,7 @@ export class UnitElement extends ViewElement {
         this.submarine.x = this.subInfo.src.x;
         this.submarine.y = this.subInfo.src.y;
         this.submarine.rotation = this.subInfo.rotation;
+        this.submarine.cacheAsBitmap = true;
         this.stage.addChild(this.submarine);
 
         this.maxBounds = this.stage.getLocalBounds();
