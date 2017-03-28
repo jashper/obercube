@@ -28,7 +28,7 @@ let mapWidth: number;
 let mapHeight: number;
 
 let activeElementId = 0;
-const grid = new ViewElementGrid(1000);
+const grid = new ViewElementGrid(100);
 let renderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer;
 
 let x = 0;

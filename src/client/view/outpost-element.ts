@@ -121,7 +121,6 @@ Object.keys(Constants.COLORS).filter(k => typeof k === 'string').forEach(k => {
     OutpostTextures[color] = OutpostElement.GENERATE_SPRITE(color);
 });
 
-
 // TODO: !!! remove everything below, and use pre-rendered font textures instead !!!
 
 const tempCanvas = new PIXI.CanvasRenderer();

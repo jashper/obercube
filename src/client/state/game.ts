@@ -46,7 +46,7 @@ export function game(state: GameStateRecord = defaultGameState(), action: Action
             });
         case GenerateActionType.GENERATE_UNITS:
             state.outposts.forEach((o: Outpost) => {
-                o.unitCount++;
+                o.unitCount = Math.min(o.unitCount + 1, 999);
 
                 state = state.merge({
                     outposts: state.outposts.set(o.id, o)
