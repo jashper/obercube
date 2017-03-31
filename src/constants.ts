@@ -26,7 +26,7 @@ function DeltaToTicks(delta: number) {
 }
 
 export default {
-    BACKGROUND_COLOR: 0x222222,
+    BACKGROUND_COLOR: 0x0,
     COLORS,
     COLOR_MAP,
     DeltaToTicks,
@@ -36,5 +36,7 @@ export default {
     OUTPOST_RADIUS: 20,
     OUTPOST_TEXT_BUFFER: 15,
     PAN_BOUNDARY_PIXELS: 75,
-    ZOOM_FACTOR: 1.25
+    ZOOM_FACTOR: 1.25,
+    MIN_ORTHO_DEPTH: 0.1,
+    MAX_ORTHO_DEPTH: 10000
 };

@@ -1,4 +1,5 @@
 import * as PIXI from 'pixi.js';
+import * as THREE from 'three';
 
 export interface Action<P> {
     type: string;
@@ -64,6 +65,8 @@ export interface User {
 }
 
 export interface RendererInfo {
+    dimensions: Dimensions;
     stage: PIXI.Container;
-    renderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer;
+    UIrenderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer;
+    renderer: THREE.WebGLRenderer;
 }

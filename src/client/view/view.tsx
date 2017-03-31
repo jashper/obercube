@@ -2,6 +2,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import * as PIXI from 'pixi.js';
+import * as THREE from 'three';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/operator/debounceTime';
@@ -31,28 +32,43 @@ class View extends React.Component<Props, {}> {
     private minHeight = 480;
 
     private stage: PIXI.Container;
-    private renderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer;
+    private UIrenderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer;
+    private renderer: THREE.WebGLRenderer;
 
     refs: {
-        canvas: HTMLCanvasElement;
+        UI: HTMLCanvasElement;
+        scene: HTMLCanvasElement;
     };
 
     componentDidMount() {
         // create the stage to be rendered
         this.stage = new PIXI.Container();
 
-        // setup the canvas renderer
+        // setup the UI canvas renderer
         const dimensions = this.getWindowDimensions();
-        this.renderer = PIXI.autoDetectRenderer(dimensions.width, dimensions.height, {
-            view: this.refs.canvas,
+        this.UIrenderer = PIXI.autoDetectRenderer(dimensions.width, dimensions.height, {
+            view: this.refs.UI,
             antialias: true,
             autoResize: true,
+            transparent: true,
             backgroundColor: Constants.BACKGROUND_COLOR,
             resolution: window.devicePixelRatio
         });
 
+        // setup the THREEJS renderer
+        this.renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            canvas: this.refs.scene
+        });
+        this.renderer.setSize(dimensions.width, dimensions.height);
+
         // start the main render loop
-        this.props.startAnimation({stage: this.stage, renderer: this.renderer});
+        this.props.startAnimation({
+            dimensions: dimensions,
+            stage: this.stage,
+            UIrenderer: this.UIrenderer,
+            renderer: this.renderer
+        });
 
         // setup an observable to listen for window resizes
         this.props.windowResize(dimensions);
@@ -64,7 +80,8 @@ class View extends React.Component<Props, {}> {
             <div>
                 <MouseHandler />
                 <WebSocketHandler />
-                <canvas ref='canvas' style={{ position: 'absolute', display: 'block' }} />
+                <canvas ref='scene' style={{ position: 'absolute', display: 'block' }} />
+                <canvas ref='UI' style={{ position: 'absolute', display: 'block' }} />
             </div>
         );
     }
@@ -84,7 +101,7 @@ class View extends React.Component<Props, {}> {
                 next: () => {
                     const dimensions = this.getWindowDimensions();
                     this.props.windowResize(dimensions);
-                    this.renderer.resize(dimensions.width, dimensions.height);
+                    this.UIrenderer.resize(dimensions.width, dimensions.height);
                 }
             });
     }

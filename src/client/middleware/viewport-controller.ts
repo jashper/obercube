@@ -1,7 +1,8 @@
 import * as PIXI from 'pixi.js';
+import * as THREE from 'three';
 import { Subscription } from 'rxjs/Subscription';
 
-import { Delta, Middleware } from '../../action';
+import { Delta, Middleware, RendererInfo } from '../../action';
 import { DestroyAction, DestroyActionType } from '../actions/destroy';
 import { MatchActionType } from '../../server/actions/match';
 import { GameTickEngine } from '../../game-tick-engine';
@@ -29,7 +30,18 @@ let mapHeight: number;
 
 let activeElementId = 0;
 const grid = new ViewElementGrid(100);
-let renderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer;
+let UIrenderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer;
+let renderer: THREE.WebGLRenderer;
+
+let camera: THREE.OrthographicCamera;
+let scene: THREE.Scene;
+// new THREE.OrthographicCamera(
+//     -dimensions.width / 2, -dimensions.height / 2,
+//     dimensions.width / 2, dimensions.height / 2,
+//     0.1, 20000
+// );
+// this.camera.position.set(0,6,0);
+// this.scene.add(camera);
 
 let x = 0;
 let y = 0;
@@ -68,6 +80,12 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
             height = action.payload.height;
 
             grid.update(x, y, width / scale, height / scale);
+            renderer.setSize(width, height);
+            camera.left = -width / 2;
+            camera.top = -height / 2;
+            camera.right = width / 2;
+            camera.bottom = height / 2;
+            camera.updateProjectionMatrix();
 
             return result;
         case WindowActionType.WINDOW_START_PAN:
@@ -102,8 +120,40 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
 
             return result;
         case WindowActionType.WINDOW_START_ANIMATION:
-            renderer = action.payload.renderer;
-            grid.stage = action.payload.stage;
+            const rendererInfo = action.payload as RendererInfo;
+            // Screen parameters
+            width = rendererInfo.dimensions.width;
+            height = rendererInfo.dimensions.height;
+
+            // UI rendering
+            UIrenderer = rendererInfo.UIrenderer;
+            grid.stage = rendererInfo.stage;
+
+            // Scene rendering
+            renderer = rendererInfo.renderer;
+            camera = new THREE.OrthographicCamera(
+                -width / 2, -height / 2, width / 2, height / 2,
+                Constants.MIN_ORTHO_DEPTH, Constants.MAX_ORTHO_DEPTH
+            );
+            scene = new THREE.Scene();
+            scene.add(camera);
+            camera.position.x = 0;
+            camera.position.y = 100;
+            camera.position.z = 100;
+            camera.lookAt(new THREE.Vector3(0, 0, 0));
+            (window as any).CAM = camera;
+
+            const geometry = new THREE.BoxGeometry( 20, 20, 20 );
+            const material = new THREE.MeshLambertMaterial({ color: 0xff0000 });
+            const mesh = new THREE.Mesh( geometry, material );
+            mesh.rotateY(45);
+            scene.add( mesh );
+
+            const light: THREE.DirectionalLight = new THREE.DirectionalLight(0xffffff);
+            light.position.set(1, -1, -1);
+            scene.add(light);
+            const lightAmb: THREE.AmbientLight = new THREE.AmbientLight( 0x404040 );
+            scene.add( lightAmb );
 
             animate();
 
@@ -177,7 +227,8 @@ function animate() {
     updateStage();
 
     grid.activeElements.forEach((e) => e.animate(engine.tick));
-    renderer.render(grid.stage);
+    UIrenderer.render(grid.stage);
+    renderer.render( scene, camera );
 
     engine.increment();
 

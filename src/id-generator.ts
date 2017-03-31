@@ -17,7 +17,6 @@ const IdGenerator = {
         maxId = minId + range;
         id = minId - 1;
     },
-
     Next: () => {
         return (++id > maxId) ? minId : id;
     }
