@@ -1,6 +1,6 @@
 import { TypedRecord, makeTypedFactory } from 'typed-immutable-record';
 
-import { Action } from '../../action';
+import { Action, Dimensions } from '../../action';
 import { WindowActionType } from '../actions/window';
 
 interface ViewportState {
@@ -17,8 +17,10 @@ export const defaultState = makeTypedFactory<ViewportState, ViewportStateRecord>
 export function viewport(state: ViewportStateRecord = defaultState(), action: Action<any>) {
     switch (action.type) {
         case WindowActionType.WINDOW_RESIZE:
-            const width = action.payload.width;
-            const height = action.payload.height;
+            const dimensions = action.payload as Dimensions;
+
+            const width = dimensions.width;
+            const height = dimensions.height;
 
             return state.merge({ width, height });
         default:

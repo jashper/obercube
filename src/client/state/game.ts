@@ -9,7 +9,7 @@ import { Action, MapInfo, Outpost, Unit, Player } from '../../action';
 import { DestroyActionType } from '../actions/destroy';
 import { SpawnActionType } from '../actions/spawn';
 import { GenerateActionType } from '../../server/actions/generate';
-import { MatchActionType } from '../../server/actions/match';
+import { MatchActionType, MatchSetup } from '../../server/actions/match';
 
 interface GameState {
     matchId: number;
@@ -36,7 +36,7 @@ export const defaultGameState = makeTypedFactory<GameState, GameStateRecord>({
 export function game(state: GameStateRecord = defaultGameState(), action: Action<any>) {
     switch (action.type) {
         case SpawnActionType.SPAWN_UNIT:
-            const unit: Unit = action.payload;
+            const unit = action.payload as Unit;
             return state.merge({
                 units: state.units.set(unit.id, unit)
             });
@@ -60,15 +60,15 @@ export function game(state: GameStateRecord = defaultGameState(), action: Action
                 players: state.players.set(player.id, player)
             });
         case MatchActionType.NEW_MATCH: // for initializing server-based stores of game state
-            const id = action.payload.id;
+            const match = action.payload as MatchSetup;
 
             let game = defaultGameState();
             game = game.merge({
-                matchId: id,
-                mapInfo: action.payload.mapInfo
+                matchId: match.id,
+                mapInfo: match.mapInfo
             });
 
-            (action.payload.outposts as Outpost[]).forEach((o) => {
+            (match.outposts as Outpost[]).forEach((o) => {
                 game = game.merge({
                     outposts: game.outposts.set(o.id, o)
                 });

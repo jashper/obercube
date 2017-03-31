@@ -10,7 +10,7 @@ export const webSocketController: Middleware<ClientStore> = store => next => act
 
     switch (action.type) {
         case SocketActionType.SOCKET_OPEN:
-            socket = action.payload;
+            socket = action.payload as WebSocket;
             return result;
         default:
             sendClientAction(action);

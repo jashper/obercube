@@ -2,15 +2,15 @@ import { createStore, combineReducers, Store } from 'redux';
 import { Subject } from 'rxjs/Subject';
 import * as logger from 'winston';
 
-import { Action, Middleware, Player } from '../../action';
+import { Action, Middleware, Player, Unit } from '../../action';
 import Constants from '../../constants';
 import { GameTickEngine } from '../../game-tick-engine';
 import { clients } from '../server';
 import { game, GameStateRecord } from '../../client/state/game';
-import { MatchAction, MatchActionType } from '../actions/match';
+import { MatchAction, MatchActionType, MatchSetup } from '../actions/match';
 import { GameTickAction, GameTickActionType } from '../actions/game-tick';
 import { GenerateAction, GenerateActionType } from '../actions/generate';
-import { UserActionType } from '../actions/user';
+import { UserActionType, JoinMatchInfo } from '../actions/user';
 import { DestroyAction } from '../../client/actions/destroy';
 import { SpawnActionType } from '../../client/actions/spawn';
 import { UnitElementInfo } from '../../client/view/unit-element-info';
@@ -42,7 +42,7 @@ export const matchController: Middleware<ServerStore> = store => next => action 
     switch (action.type) {
         case MatchActionType.NEW_MATCH:
         {
-            const matchId = action.payload.id;
+            const matchId = (action.payload as MatchSetup).id;
             const gameStore = createStore<GameRecord>(combineReducers<GameRecord>({ game }));
 
             gameStore.dispatch(action);
@@ -83,8 +83,10 @@ export const matchController: Middleware<ServerStore> = store => next => action 
         }
         case UserActionType.JOIN_MATCH:
         {
-            const userId = action.payload.userId;
-            const matchId = action.payload.matchId;
+            const info = action.payload as JoinMatchInfo;
+
+            const userId = info.userId;
+            const matchId = info.matchId;
             const match = matches.get(matchId)!;
 
             const player: Player = {
@@ -115,16 +117,17 @@ export const matchController: Middleware<ServerStore> = store => next => action 
             // TODO: verify that this is a valid action for the requesting player
 
             // TODO: generalize injecting ticks / removing sensitive properties like userId
+            const unit = action.payload as Unit;
             const tick = match.engine.tick;
-            action.payload.startTick = tick;
-            action.payload.endTick = UnitElementInfo.GET_END_TICK(action.payload, match.store.getState().game, tick);
+            unit.startTick = tick;
+            unit.endTick = UnitElementInfo.GET_END_TICK(unit, match.store.getState().game, tick);
             delete action.userId;
 
             match.store.dispatch(action);
             match.engine.queueEvent({
-                trigger: action.payload.endTick,
+                trigger: unit.endTick,
                 interval: 0,
-                action: () => DestroyAction.unit(action.payload.id)
+                action: () => DestroyAction.unit(unit.id)
             });
 
             match.publisher.next(action);

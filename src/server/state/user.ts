@@ -2,7 +2,7 @@ import { Map } from 'immutable';
 import { TypedRecord, makeTypedFactory } from 'typed-immutable-record';
 
 import { Action, User } from '../../action';
-import { UserActionType } from '../actions/user';
+import { UserActionType, JoinMatchInfo } from '../actions/user';
 
 interface UserState {
     active: Map<number, User>;
@@ -29,8 +29,10 @@ export function user(state: UserStateRecord = defaultState(), action: Action<any
         }
         case UserActionType.JOIN_MATCH:
         {
-            const userId = action.payload.userId;
-            const matchId = action.payload.matchId;
+            const info = action.payload as JoinMatchInfo;
+
+            const userId = info.userId;
+            const matchId = info.matchId;
 
             const user = state.active.get(userId);
             user.activeMatchId = matchId;

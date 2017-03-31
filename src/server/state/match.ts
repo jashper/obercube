@@ -2,8 +2,8 @@ import { Map } from 'immutable';
 import { TypedRecord, makeTypedFactory } from 'typed-immutable-record';
 
 import { Action, User } from '../../action';
-import { MatchActionType } from '../actions/match';
-import { UserActionType } from '../actions/user';
+import { MatchActionType, MatchSetup } from '../actions/match';
+import { UserActionType, JoinMatchInfo } from '../actions/user';
 
 export interface Match {
     id: number;
@@ -23,15 +23,17 @@ export function match(state: MatchStateRecord = defaultState(), action: Action<a
     switch (action.type) {
         case MatchActionType.NEW_MATCH:
         {
-            const id = action.payload.id;
+            const id = (action.payload as MatchSetup).id;
             const match = { id, users: new Set<number>() };
 
             return state.merge({ idMap: state.idMap.set(id, match) });
         }
         case UserActionType.JOIN_MATCH:
         {
-            const userId = action.payload.userId;
-            const matchId = action.payload.matchId;
+            const info = action.payload as JoinMatchInfo;
+
+            const userId = info.userId;
+            const matchId = info.matchId;
 
             const match = state.idMap.get(matchId);
             match.users.add(userId);

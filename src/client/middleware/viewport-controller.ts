@@ -1,10 +1,10 @@
 import * as PIXI from 'pixi.js';
 import { Subscription } from 'rxjs/Subscription';
 
-import { Delta, Middleware } from '../../action';
+import { Coordinates, Delta, Dimensions, Middleware, RendererInfo } from '../../action';
 import { DestroyAction, DestroyActionType } from '../actions/destroy';
 import { MatchActionType } from '../../server/actions/match';
-import { GameTickEngine } from '../../game-tick-engine';
+import { GameTickEngine, GameTickEvent } from '../../game-tick-engine';
 import { GameTickActionType } from '../../server/actions/game-tick';
 import { MouseActionType } from '../actions/mouse';
 import { SpawnActionType } from '../actions/spawn';
@@ -61,18 +61,19 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
             engine.sync(action.payload);
             return result;
         case GameTickActionType.QUEUE_EVENT:
-            engine.queueEvent(action.payload);
+            engine.queueEvent(action.payload as GameTickEvent);
             return result;
         case WindowActionType.WINDOW_RESIZE:
-            width = action.payload.width;
-            height = action.payload.height;
+            const dimensions = action.payload as Dimensions;
+            width = dimensions.width;
+            height = dimensions.height;
 
             grid.update(x, y, width / scale, height / scale);
 
             return result;
         case WindowActionType.WINDOW_START_PAN:
             isPanning = true;
-            panDelta = action.payload;
+            panDelta = action.payload as Delta;
 
             return result;
         case WindowActionType.WINDOW_END_PAN:
@@ -80,12 +81,13 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
 
             return result;
         case MouseActionType.MOUSE_WHEEL:
-            setZoomTargets(action.payload);
+            setZoomTargets(action.payload as WheelEvent);
 
             return result;
         case MouseActionType.MOUSE_CLICK:
             // get the local position for the click
-            const point = new PIXI.Point(action.payload.x, action.payload.y);
+            const { x: px, y: py } = action.payload as Coordinates;
+            const point = new PIXI.Point(px, py);
             const localPt = new PIXI.Point();
             PIXI.interaction.InteractionData.prototype.getLocalPosition(grid.stage, localPt, point);
 
@@ -102,8 +104,9 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
 
             return result;
         case WindowActionType.WINDOW_START_ANIMATION:
-            renderer = action.payload.renderer;
-            grid.stage = action.payload.stage;
+            const info = action.payload as RendererInfo;
+            renderer = info.renderer;
+            grid.stage = info.stage;
 
             animate();
 
