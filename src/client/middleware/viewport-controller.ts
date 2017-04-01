@@ -2,7 +2,7 @@ import * as PIXI from 'pixi.js';
 import * as THREE from 'three';
 import { Subscription } from 'rxjs/Subscription';
 
-import { Delta, Middleware, RendererInfo } from '../../action';
+import { Delta, Middleware, RendererInfo, Coordinates } from '../../action';
 import { DestroyAction, DestroyActionType } from '../actions/destroy';
 import { MatchActionType } from '../../server/actions/match';
 import { GameTickEngine } from '../../game-tick-engine';
@@ -48,10 +48,12 @@ let y = 0;
 let width = 0;
 let height = 0;
 let scale = 1;
+let aspectRatio = 1;
 
 let targetX = 0;
 let targetY = 0;
 let targetScale = 1;
+let mesh3: THREE.Mesh;
 
 let isPanning = false;
 let panDelta: Delta;
@@ -78,13 +80,10 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
         case WindowActionType.WINDOW_RESIZE:
             width = action.payload.width;
             height = action.payload.height;
+            aspectRatio = width / height;
 
             grid.update(x, y, width / scale, height / scale);
             renderer.setSize(width, height);
-            camera.left = -width / 2;
-            camera.top = -height / 2;
-            camera.right = width / 2;
-            camera.bottom = height / 2;
             camera.updateProjectionMatrix();
 
             return result;
@@ -131,15 +130,17 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
 
             // Scene rendering
             renderer = rendererInfo.renderer;
+            aspectRatio = width / height;
             camera = new THREE.OrthographicCamera(
-                -width / 2, -height / 2, width / 2, height / 2,
-                Constants.MIN_ORTHO_DEPTH, Constants.MAX_ORTHO_DEPTH
+                -Constants.ORTHO_UNIT_SCALE / 2 * aspectRatio, Constants.ORTHO_UNIT_SCALE / 2 * aspectRatio,
+                -Constants.ORTHO_UNIT_SCALE / 2, Constants.ORTHO_UNIT_SCALE / 2,
+                Constants.ORTHO_MIN_DEPTH, Constants.ORTHO_MAX_DEPTH
             );
             scene = new THREE.Scene();
             scene.add(camera);
             camera.position.x = 0;
-            camera.position.y = 100;
-            camera.position.z = 100;
+            camera.position.y = Constants.ORTHO_DISTANCE;
+            camera.position.z = Constants.ORTHO_DISTANCE;
             camera.lookAt(new THREE.Vector3(0, 0, 0));
             (window as any).CAM = camera;
 
@@ -147,10 +148,18 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
             const material = new THREE.MeshLambertMaterial({ color: 0xff0000 });
             const mesh = new THREE.Mesh( geometry, material );
             mesh.rotateY(45);
+            const mesh2 = new THREE.Mesh( geometry, material );
+            mesh2.rotateY(30);
+            mesh2.position.set(50, 0, 0);
+            mesh3 = new THREE.Mesh( geometry, material );
+            mesh3.rotateY(60);
+            mesh3.position.set(0, 0, 50);
             scene.add( mesh );
+            scene.add( mesh2 );
+            scene.add( mesh3 );
 
             const light: THREE.DirectionalLight = new THREE.DirectionalLight(0xffffff);
-            light.position.set(1, -1, -1);
+            light.position.set(0.5, 1, 0.1);
             scene.add(light);
             const lightAmb: THREE.AmbientLight = new THREE.AmbientLight( 0x404040 );
             scene.add( lightAmb );
@@ -236,54 +245,73 @@ function animate() {
 }
 
 function setPanTargets() {
-    targetX += panDelta.dx * scale;
-    targetY += panDelta.dy * scale;
+    const dT = 1 / 60;
+    targetX += panDelta.dx * scale * dT;
+    targetY += panDelta.dy * scale * dT;
 }
 
 function setZoomTargets(ev: WheelEvent) {
+    const ticks = Math.abs(ev.deltaY);
     const isZoomIn = ev.deltaY < 0;
 
-    const factor = (isZoomIn ? Constants.ZOOM_FACTOR : 1 / Constants.ZOOM_FACTOR);
-    const oldScale = targetScale;
-    const newScale = targetScale * factor;
-
-    if (newScale <= Constants.MIN_SCALE || newScale >= Constants.MAX_SCALE) {
-        return;
+    // x% increase per tick
+    // Zin = 1 + x
+    // Zout = 1 - 1 / (1 + x)
+    let factor = Math.pow(1 + Constants.ZOOM_PER_WHEEL, ticks);
+    if (isZoomIn) {
+        factor = Math.pow(1 - 1 / (1 + Constants.ZOOM_PER_WHEEL), ticks);
     }
 
+    // Compute new zoom scale
+    const oldScale = targetScale;
+    let newScale = targetScale * factor;
+
+    // Limit and apply zoom scale
+    if (newScale <= Constants.ZOOM_MIN_SCALE) {
+        newScale = Constants.ZOOM_MIN_SCALE;
+    } else if (newScale >= Constants.ZOOM_MAX_SCALE) {
+        newScale = Constants.ZOOM_MAX_SCALE;
+    }
     targetScale = newScale;
 
-    // get the local position for the scroll event (i.e. coordinates for when the scale is 1)
-    const { clientX, clientY } = ev;
-    const point = new PIXI.Point(clientX, clientY);
-    const localPt = new PIXI.Point();
-    PIXI.interaction.InteractionData.prototype.getLocalPosition(grid.stage, localPt, point);
-
-    // transform the origin in order to center the zoom at the coordinates of the scroll event
-    const delta = targetScale - oldScale;
-    targetX -= localPt.x * delta;
-    targetY -= localPt.y * delta;
+    let wc = mouseToWorld(ev);
+    mesh3.position.x = wc.x;
+    mesh3.position.z = wc.y;
 }
 
 function updateStage() {
     const k = 7;
+    const dT = 1 / 60;
 
-    grid.stage.x += (targetX - grid.stage.x) * k * (1 / 60);
-    grid.stage.y += (targetY - grid.stage.y) * k * (1 / 60);
+    grid.stage.x += (targetX - grid.stage.x) * k * dT;
+    grid.stage.y += (targetY - grid.stage.y) * k * dT;
+    camera.position.x = grid.stage.x;
+    camera.position.z = grid.stage.y + Constants.ORTHO_DISTANCE;
+    camera.position.y = Constants.ORTHO_DISTANCE;
 
-    scale += (targetScale - scale) * k * (1 / 60);
+    scale += (targetScale - scale) * k * dT;
     grid.stage.scale.set(scale, scale);
+    camera.left = -Constants.ORTHO_UNIT_SCALE / 2 * aspectRatio * scale;
+    camera.right = Constants.ORTHO_UNIT_SCALE / 2 * aspectRatio * scale;
+    camera.bottom = -Constants.ORTHO_UNIT_SCALE / 2 * scale;
+    camera.top = Constants.ORTHO_UNIT_SCALE / 2 * scale;
+    camera.updateProjectionMatrix();
+
+    mesh3.position.y = Math.sin(Date.now() * 0.005) * 10;
 
     // restrict movement to the borders of the map
     // grid.stage.x = Math.max(-mapWidth * scale + width, Math.min(0, grid.stage.x));
     // grid.stage.y = Math.max(-mapHeight * scale + height, Math.min(0, grid.stage.y));
 
-    // get the new top left corner offset
-    x = -grid.stage.x / scale;
-    y = -grid.stage.y / scale;
-
     if (Math.abs(targetX - grid.stage.x) > 1 || Math.abs(targetY - grid.stage.y) > 1 ||
             Math.abs(targetScale - scale) > 1) {
         grid.update(x, y, width / scale, height / scale);
+    }
+}
+
+function mouseToWorld(ev: MouseEvent): Coordinates {
+    return {
+        x: camera.left + (camera.right - camera.left) * ev.clientX / width + camera.position.x,
+        y: (camera.bottom + (camera.top - camera.bottom) * ev.clientY / height) / 0.707 + (camera.position.z - Constants.ORTHO_DISTANCE)
     }
 }

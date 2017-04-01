@@ -37,7 +37,6 @@ class MouseHandler extends React.Component<Props, {}> {
             });
 
         Observable.fromEvent(window, 'wheel')
-            .debounceTime(10)
             .subscribe({
                 next: (ev: WheelEvent) => this.onWheel(ev)
             });
@@ -82,18 +81,18 @@ class MouseHandler extends React.Component<Props, {}> {
         const bound = Constants.PAN_BOUNDARY_PIXELS;
 
         if (x < bound) {
-            dx = 1;
-        } else if (x > this.props.viewport.width - bound) {
             dx = -1;
+        } else if (x > this.props.viewport.width - bound) {
+            dx = 1;
         }
 
         if (y < bound) {
-            dy = 1;
-        } else if (y > this.props.viewport.height - bound) {
             dy = -1;
+        } else if (y > this.props.viewport.height - bound) {
+            dy = 1;
         }
 
-        return { dx: dx * 10, dy: dy * 10 };
+        return { dx: dx * Constants.PAN_RATE, dy: dy * Constants.PAN_RATE };
     }
 }
 

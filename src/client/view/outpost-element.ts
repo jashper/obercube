@@ -40,7 +40,7 @@ export class OutpostElement extends ViewElement {
         this.outpost.y += r + Constants.OUTPOST_TEXT_BUFFER;
         this.outpost.pivot.set(r, r);
         this.outpost.cacheAsBitmap = true;
-        this.stage.addChild(this.outpost);
+        // this.stage.addChild(this.outpost);
 
         this.addUnitLabel(d.unitCount);
 
@@ -112,7 +112,7 @@ export class OutpostElement extends ViewElement {
         this.unitLabel.anchor.set(0.5);
 
         this.prevUnitCount = count;
-        this.stage.addChild(this.unitLabel);
+        // this.stage.addChild(this.unitLabel);
     }
 }
 
