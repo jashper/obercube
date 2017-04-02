@@ -69,6 +69,7 @@ export interface User {
 export interface RendererInfo {
     dimensions: Dimensions;
     stage: PIXI.Container;
+    scene: THREE.Scene;
     UIrenderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer;
     renderer: THREE.WebGLRenderer;
 }

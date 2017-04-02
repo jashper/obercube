@@ -29,7 +29,7 @@ export class ViewElementGrid {
     private elements = new Map<number, ViewElement>();
     private visibleElements = new Set<number>();
 
-    stage: PIXI.Container;
+    private scene: THREE.Scene;
 
     get activeElements() {
         return Array.from(this.visibleElements.values())
@@ -46,8 +46,9 @@ export class ViewElementGrid {
                 .map((id) => this.elements.get(id) as ViewElement);
     }
 
-    constructor(binSize: number) {
+    constructor(binSize: number, scene: THREE.Scene) {
         this.binSize = binSize;
+        this.scene = scene;
     }
 
     init(mapWidth: number, mapHeight: number) {
@@ -57,9 +58,9 @@ export class ViewElementGrid {
 
         this.resetBins();
 
-        this.stage.children.forEach((c) => {
-            this.stage.removeChild(c);
-        });
+        // this.scene.children.forEach((c) => {
+        //     this.scene.remove(c);
+        // });
     }
 
     private resetBins() {
@@ -95,55 +96,55 @@ export class ViewElementGrid {
         };
 
         // get the newly visible bins
-        const newBins = this.getContainingBins(position);
-        newBins.forEach((bin) => {
-            (this.bins.get(bin) as Set<number>).forEach((id) => {
-                const e = this.elements.get(id) as ViewElement;
-                if (this.isElementVisible(e) && !e.stage.visible) {
-                    e.stage.visible = true;
-                    this.visibleElements.add(id);
-                }
-            });
-        });
+        // const newBins = this.getContainingBins(position);
+        // newBins.forEach((bin) => {
+        //     (this.bins.get(bin) as Set<number>).forEach((id) => {
+        //         const e = this.elements.get(id) as ViewElement;
+        //         if (this.isElementVisible(e) && !e.stage.visible) {
+        //             e.stage.visible = true;
+        //             this.visibleElements.add(id);
+        //         }
+        //     });
+        // });
 
-        this.visibleBins.forEach((bin) => {
-            if (!newBins.has(bin)) {
-                (this.bins.get(bin) as Set<number>).forEach((id) => {
-                    const e = this.elements.get(id) as ViewElement;
-                    if (!this.isElementVisible(e)) {
-                        e.stage.visible = false;
-                        this.visibleElements.delete(id);
-                    }
-                });
-            }
-        });
+        // this.visibleBins.forEach((bin) => {
+        //     if (!newBins.has(bin)) {
+        //         (this.bins.get(bin) as Set<number>).forEach((id) => {
+        //             const e = this.elements.get(id) as ViewElement;
+        //             if (!this.isElementVisible(e)) {
+        //                 e.stage.visible = false;
+        //                 this.visibleElements.delete(id);
+        //             }
+        //         });
+        //     }
+        // });
 
-        this.visibleBins = newBins;
+        // this.visibleBins = newBins;
     }
 
     insert(e: ViewElement) {
         const id = e.drawable().id;
         const position = this.getPosition(e);
 
-        this.stage.addChild(e.stage);
+        this.scene.add(e.object);
         this.elements.set(id, e);
 
-        this.getContainingBins(position).forEach((bin) => {
-            (this.bins.get(bin) as Set<number>).add(id);
-        });
+        // this.getContainingBins(position).forEach((bin) => {
+        //     (this.bins.get(bin) as Set<number>).add(id);
+        // });
 
-        if (this.isElementVisible(e)) {
-            this.visibleElements.add(id);
-        } else {
-            e.stage.visible = false;
-        }
+        // if (this.isElementVisible(e)) {
+        //     this.visibleElements.add(id);
+        // } else {
+        //     e.stage.visible = false;
+        // }
     }
 
     remove(id: number) {
         const e = this.elements.get(id) as ViewElement;
         const position = this.getPosition(e);
 
-        this.stage.removeChild(e.stage);
+        this.scene.add(e.object);
         this.elements.delete(id);
 
         this.getContainingBins(position).forEach((bin) => {
@@ -161,11 +162,15 @@ export class ViewElementGrid {
     }
 
     private getPosition(e: ViewElement): ScaledPosition {
-        let { x, y } = e.stage;
-        x -= e.stage.pivot.x;
-        y -= e.stage.pivot.y;
+        // let { x, y } = e.stage;
+        // x -= e.stage.pivot.x;
+        // y -= e.stage.pivot.y;
 
-        const { width, height } = e.maxBounds;
+        // const { width, height } = e.maxBounds;
+        let x = 0;
+        let y = 0;
+        let width = 0;
+        let height = 0;
 
         return {
             x,

@@ -1,10 +1,12 @@
 import * as PIXI from 'pixi.js';
+import * as THREE from 'three';
 
 import { Dispatch, Outpost } from '../../action';
 import Constants from '../../constants';
 import { SpawnAction } from '../actions/spawn';
 import { StoreRecords } from '../state/reducers';
 import { ViewElement } from './view-element';
+import { METAL, DARK_METAL } from './scene-materials';
 
 const OutpostTextures: {[key: number]: PIXI.Texture} = {};
 const UnitCountTextures: {[key: number]: PIXI.Texture} = {};
@@ -31,20 +33,39 @@ export class OutpostElement extends ViewElement {
         const d = this.drawable();
         const r = Constants.OUTPOST_RADIUS;
 
-        this.stage.x = d.x;
-        this.stage.y = d.y;
+        // this.stage.x = d.x;
+        // this.stage.y = d.y;
 
-        const color = Constants.COLOR_MAP.get(d.playerId)!;
-        this.outpost = new PIXI.Sprite(OutpostTextures[color]);
-        this.outpost.x += r;
-        this.outpost.y += r + Constants.OUTPOST_TEXT_BUFFER;
-        this.outpost.pivot.set(r, r);
-        this.outpost.cacheAsBitmap = true;
-        // this.stage.addChild(this.outpost);
+        // const color = Constants.COLOR_MAP.get(d.playerId)!;
+        // this.outpost = new PIXI.Sprite(OutpostTextures[color]);
+        // this.outpost.x += r;
+        // this.outpost.y += r + Constants.OUTPOST_TEXT_BUFFER;
+        // this.outpost.pivot.set(r, r);
+        // this.outpost.cacheAsBitmap = true;
+
+        const buildingGeom = new THREE.BoxGeometry( r, r, r );
+        const stack1Geom = new THREE.BoxGeometry( r / 5, r, r / 5 );
+        const stack2Geom = new THREE.BoxGeometry( r / 8, r, r / 8 );
+        const building = new THREE.Mesh( buildingGeom, METAL );
+        const stack1 = new THREE.Mesh( stack1Geom, DARK_METAL );
+        const stack2 = new THREE.Mesh( stack2Geom, DARK_METAL );
+        building.position.y = r / 2;
+        stack1.position.y = r * 2 / 2;
+        stack1.position.x = -r * 2 / 10;
+        stack1.position.z = -r * 2 / 10;
+        stack2.position.y = r * 3 / 4;
+        stack2.position.x = -r * 4 / 10;
+        stack1.position.z = -r * 3 / 10;
+        this.object.add(building);
+        this.object.add(stack1);
+        this.object.add(stack2);
+        this.object.position.x = d.x;
+        this.object.position.z = d.y;
+        // this.object.rotateY(150 / 57.3);
 
         this.addUnitLabel(d.unitCount);
 
-        this.maxBounds = this.stage.getLocalBounds();
+        // this.maxBounds = this.stage.getLocalBounds();
     }
 
     static GENERATE_SPRITE(color: number): PIXI.Texture {
@@ -82,8 +103,8 @@ export class OutpostElement extends ViewElement {
 
         const unitCount = this.drawable().unitCount;
         if (unitCount !== this.prevUnitCount) {
-            this.stage.removeChild(this.unitLabel);
-            this.addUnitLabel(unitCount);
+            // this.stage.removeChild(this.unitLabel);
+            // this.addUnitLabel(unitCount);
         }
     }
 

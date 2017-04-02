@@ -141,12 +141,12 @@ export class Server extends EventEmitter {
 
         IdGenerator.Init(0, max);
 
-        const width = 5000;
-        const height = 5000;
+        const width = 1000;
+        const height = 1000;
 
         const outposts: Outpost[] = [];
-        for (let x = 100; x < width - 100; x += 120) {
-            for (let y = 100; y < height - 100; y += 120) {
+        for (let x = 100; x < width - 100; x += 30) {
+            for (let y = 100; y < height - 100; y += 30) {
                 if (Math.random() > 0.5) {
                     continue;
                 }

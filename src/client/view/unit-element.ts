@@ -27,15 +27,15 @@ export class UnitElement extends ViewElement {
         const dst = this.state().game.outposts.get(d.dst as number);
 
         this.lineInfo = UnitElementInfo.GET_LINE_INFO(src, dst);
-        this.stage.x = this.lineInfo.stage.x;
-        this.stage.y = this.lineInfo.stage.y;
+        // this.stage.x = this.lineInfo.stage.x;
+        // this.stage.y = this.lineInfo.stage.y;
 
         const line = new PIXI.Graphics();
         line.lineStyle(1, 0xFFFFFF);
 
-        line.moveTo(this.lineInfo.src.x - this.stage.x, this.lineInfo.src.y - this.stage.y);
-        line.lineTo(this.lineInfo.dst.x - this.stage.x, this.lineInfo.dst.y - this.stage.y);
-        this.stage.addChild(line);
+        // line.moveTo(this.lineInfo.src.x - this.stage.x, this.lineInfo.src.y - this.stage.y);
+        // line.lineTo(this.lineInfo.dst.x - this.stage.x, this.lineInfo.dst.y - this.stage.y);
+        // this.stage.addChild(line);
 
         const playerId = this.state().game.outposts.get(d.src as number).playerId;
         const color = Constants.COLOR_MAP.get(playerId)!;
@@ -46,9 +46,9 @@ export class UnitElement extends ViewElement {
         this.submarine.y = this.subInfo.src.y;
         this.submarine.rotation = this.subInfo.rotation;
         this.submarine.cacheAsBitmap = true;
-        this.stage.addChild(this.submarine);
+        // this.stage.addChild(this.submarine);
 
-        this.maxBounds = this.stage.getLocalBounds();
+        // this.maxBounds = this.stage.getLocalBounds();
     }
 
     static GENERATE_SUBMARINE_SPRITE(color: number): PIXI.Texture {
@@ -68,7 +68,7 @@ export class UnitElement extends ViewElement {
         if (d.endTick === 0) {
             return;
         } else if (this.isCompleted) {
-            this.stage.visible = false;
+            // this.stage.visible = false;
             return;
         }
 

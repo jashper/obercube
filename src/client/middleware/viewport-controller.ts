@@ -25,34 +25,37 @@ function getState(): StoreRecords {
 const engine = new GameTickEngine();
 let engineSub: Subscription;
 
-let mapWidth: number;
-let mapHeight: number;
-
 let activeElementId = 0;
-const grid = new ViewElementGrid(100);
+
+// UI Rendering
 let UIrenderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer;
+let stage: PIXI.Container;
+
+// 3D Scene Rendering
 let renderer: THREE.WebGLRenderer;
-
-let camera: THREE.OrthographicCamera;
 let scene: THREE.Scene;
-// new THREE.OrthographicCamera(
-//     -dimensions.width / 2, -dimensions.height / 2,
-//     dimensions.width / 2, dimensions.height / 2,
-//     0.1, 20000
-// );
-// this.camera.position.set(0,6,0);
-// this.scene.add(camera);
+let grid: ViewElementGrid;
 
-let x = 0;
-let y = 0;
-let width = 0;
-let height = 0;
-let scale = 1;
-let aspectRatio = 1;
-
+// Camera and controls
+let camera: THREE.OrthographicCamera;
 let targetX = 0;
 let targetY = 0;
 let targetScale = 1;
+let x = 0;
+let y = 0;
+let scale = 1;
+let rotationYaw = 0;
+let rotationPitch = 0;
+
+// Game Info
+let mapWidth: number;
+let mapHeight: number;
+
+// Screen Info
+let width = 0;
+let height = 0;
+let aspectRatio = 1;
+
 let mesh3: THREE.Mesh;
 
 let isPanning = false;
@@ -82,7 +85,7 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
             height = action.payload.height;
             aspectRatio = width / height;
 
-            grid.update(x, y, width / scale, height / scale);
+            // grid.update(x, y, width / scale, height / scale);
             renderer.setSize(width, height);
             camera.updateProjectionMatrix();
 
@@ -104,17 +107,17 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
             // get the local position for the click
             const point = new PIXI.Point(action.payload.x, action.payload.y);
             const localPt = new PIXI.Point();
-            PIXI.interaction.InteractionData.prototype.getLocalPosition(grid.stage, localPt, point);
+            // PIXI.interaction.InteractionData.prototype.getLocalPosition(grid.stage, localPt, point);
 
             const elements = grid.getBinElements(localPt.x, localPt.y);
             elements.forEach((e) => {
-                if (e instanceof OutpostElement) {
-                    const d = e.drawable();
-                    if (localPt.x >= d.x && localPt.y >= d.y &&
-                            localPt.x <= d.x + e.maxBounds.width && localPt.y <= d.y + e.maxBounds.height) {
-                        activeElementId = e.onClick(activeElementId, engine.tick);
-                    }
-                }
+                // if (e instanceof OutpostElement) {
+                //     const d = e.drawable();
+                //     if (localPt.x >= d.x && localPt.y >= d.y &&
+                //             localPt.x <= d.x + e.maxBounds.width && localPt.y <= d.y + e.maxBounds.height) {
+                //         activeElementId = e.onClick(activeElementId, engine.tick);
+                //     }
+                // }
             });
 
             return result;
@@ -123,47 +126,18 @@ export const viewportController: Middleware<ClientStore> = store => next => acti
             // Screen parameters
             width = rendererInfo.dimensions.width;
             height = rendererInfo.dimensions.height;
+            aspectRatio = width / height;
 
             // UI rendering
             UIrenderer = rendererInfo.UIrenderer;
-            grid.stage = rendererInfo.stage;
+            stage = rendererInfo.stage;
 
             // Scene rendering
             renderer = rendererInfo.renderer;
-            aspectRatio = width / height;
-            camera = new THREE.OrthographicCamera(
-                -Constants.ORTHO_UNIT_SCALE / 2 * aspectRatio, Constants.ORTHO_UNIT_SCALE / 2 * aspectRatio,
-                -Constants.ORTHO_UNIT_SCALE / 2, Constants.ORTHO_UNIT_SCALE / 2,
-                Constants.ORTHO_MIN_DEPTH, Constants.ORTHO_MAX_DEPTH
-            );
-            scene = new THREE.Scene();
-            scene.add(camera);
-            camera.position.x = 0;
-            camera.position.y = Constants.ORTHO_DISTANCE;
-            camera.position.z = Constants.ORTHO_DISTANCE;
-            camera.lookAt(new THREE.Vector3(0, 0, 0));
-            (window as any).CAM = camera;
-
-            const geometry = new THREE.BoxGeometry( 20, 20, 20 );
-            const material = new THREE.MeshLambertMaterial({ color: 0xff0000 });
-            const mesh = new THREE.Mesh( geometry, material );
-            mesh.rotateY(45);
-            const mesh2 = new THREE.Mesh( geometry, material );
-            mesh2.rotateY(30);
-            mesh2.position.set(50, 0, 0);
-            mesh3 = new THREE.Mesh( geometry, material );
-            mesh3.rotateY(60);
-            mesh3.position.set(0, 0, 50);
-            scene.add( mesh );
-            scene.add( mesh2 );
-            scene.add( mesh3 );
-
-            const light: THREE.DirectionalLight = new THREE.DirectionalLight(0xffffff);
-            light.position.set(0.5, 1, 0.1);
-            scene.add(light);
-            const lightAmb: THREE.AmbientLight = new THREE.AmbientLight( 0x404040 );
-            scene.add( lightAmb );
-
+            scene = rendererInfo.scene;
+            grid = new ViewElementGrid(100, scene);
+            initCamera();
+            initLighting();
             animate();
 
             return result;
@@ -233,11 +207,11 @@ function animate() {
         setPanTargets();
     }
 
-    updateStage();
+    updateCamera();
 
     grid.activeElements.forEach((e) => e.animate(engine.tick));
-    UIrenderer.render(grid.stage);
-    renderer.render( scene, camera );
+    UIrenderer.render(stage);
+    renderer.render(scene, camera);
 
     engine.increment();
 
@@ -274,44 +248,79 @@ function setZoomTargets(ev: WheelEvent) {
     }
     targetScale = newScale;
 
-    let wc = mouseToWorld(ev);
-    mesh3.position.x = wc.x;
-    mesh3.position.z = wc.y;
+    // Move camera position to retain mouse-centric zoom
+    // Derived via -> wc(ev, oldScale) = wc(ev, newScale)
+    const {Rx, Ry} = {Rx: ev.x / width, Ry: ev.y / height};
+    const deltaX = newScale - oldScale + 2 * oldScale * Rx - 2 * newScale * Rx;
+    const deltaY = newScale - oldScale + 2 * oldScale * Ry - 2 * newScale * Ry;
+    targetX += Constants.ORTHO_UNIT_SCALE / 2 * aspectRatio * deltaX;
+    targetY += Constants.ORTHO_UNIT_SCALE / 2 / 0.707 * deltaY;
 }
 
-function updateStage() {
+function updateCamera() {
     const k = 7;
     const dT = 1 / 60;
 
-    grid.stage.x += (targetX - grid.stage.x) * k * dT;
-    grid.stage.y += (targetY - grid.stage.y) * k * dT;
-    camera.position.x = grid.stage.x;
-    camera.position.z = grid.stage.y + Constants.ORTHO_DISTANCE;
-    camera.position.y = Constants.ORTHO_DISTANCE;
+    // Modify camera position
+    x += (targetX - x) * k * dT;
+    y += (targetY - y) * k * dT;
+    // PITCH = 1, YAW = 0.6
+    rotationYaw = (window as any).YAW || rotationYaw;
+    rotationPitch = (window as any).PITCH || rotationPitch;
+    camera.position.x = x + Math.sin(rotationYaw) * Constants.ORTHO_DISTANCE * Math.sin(rotationPitch);
+    camera.position.y = Math.cos(rotationPitch) * Constants.ORTHO_DISTANCE;
+    camera.position.z = y + Math.cos(rotationYaw) * Constants.ORTHO_DISTANCE * Math.sin(rotationPitch);
+    camera.lookAt(new THREE.Vector3(x, 0, y));
 
+    // Modify camera scale
     scale += (targetScale - scale) * k * dT;
-    grid.stage.scale.set(scale, scale);
     camera.left = -Constants.ORTHO_UNIT_SCALE / 2 * aspectRatio * scale;
     camera.right = Constants.ORTHO_UNIT_SCALE / 2 * aspectRatio * scale;
     camera.bottom = -Constants.ORTHO_UNIT_SCALE / 2 * scale;
     camera.top = Constants.ORTHO_UNIT_SCALE / 2 * scale;
-    camera.updateProjectionMatrix();
 
-    mesh3.position.y = Math.sin(Date.now() * 0.005) * 10;
+    // Update camera projection
+    camera.updateProjectionMatrix();
 
     // restrict movement to the borders of the map
     // grid.stage.x = Math.max(-mapWidth * scale + width, Math.min(0, grid.stage.x));
     // grid.stage.y = Math.max(-mapHeight * scale + height, Math.min(0, grid.stage.y));
 
-    if (Math.abs(targetX - grid.stage.x) > 1 || Math.abs(targetY - grid.stage.y) > 1 ||
-            Math.abs(targetScale - scale) > 1) {
-        grid.update(x, y, width / scale, height / scale);
-    }
+    // if (Math.abs(targetX - grid.stage.x) > 1 || Math.abs(targetY - grid.stage.y) > 1 ||
+    //         Math.abs(targetScale - scale) > 1) {
+    //     grid.update(x, y, width / scale, height / scale);
+    // }
+}
+
+function initCamera() {
+    camera = new THREE.OrthographicCamera(
+        -Constants.ORTHO_UNIT_SCALE / 2 * aspectRatio, Constants.ORTHO_UNIT_SCALE / 2 * aspectRatio,
+        -Constants.ORTHO_UNIT_SCALE / 2, Constants.ORTHO_UNIT_SCALE / 2,
+        Constants.ORTHO_MIN_DEPTH, Constants.ORTHO_MAX_DEPTH
+    );
+    // Isometric view
+    camera.position.x = Constants.ORTHO_DISTANCE;
+    camera.position.y = Constants.ORTHO_DISTANCE;
+    camera.position.z = Constants.ORTHO_DISTANCE;
+    camera.lookAt(new THREE.Vector3(0, 0, 0));
+    scene.add(camera);
+    (window as any).CAM = camera;
+}
+
+function initLighting() {
+    // White directional light
+    const light: THREE.DirectionalLight = new THREE.DirectionalLight(0xbbbbbb);
+    light.position.set(0.5, 1, 0.1);
+    scene.add(light);
+
+    // Soft white ambient light
+    const lightAmb: THREE.AmbientLight = new THREE.AmbientLight( 0x404040 );
+    scene.add( lightAmb );
 }
 
 function mouseToWorld(ev: MouseEvent): Coordinates {
     return {
         x: camera.left + (camera.right - camera.left) * ev.clientX / width + camera.position.x,
         y: (camera.bottom + (camera.top - camera.bottom) * ev.clientY / height) / 0.707 + (camera.position.z - Constants.ORTHO_DISTANCE)
-    }
+    };
 }

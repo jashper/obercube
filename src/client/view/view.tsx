@@ -32,6 +32,7 @@ class View extends React.Component<Props, {}> {
     private minHeight = 480;
 
     private stage: PIXI.Container;
+    private scene: THREE.Scene;
     private UIrenderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer;
     private renderer: THREE.WebGLRenderer;
 
@@ -43,6 +44,7 @@ class View extends React.Component<Props, {}> {
     componentDidMount() {
         // create the stage to be rendered
         this.stage = new PIXI.Container();
+        this.scene = new THREE.Scene();
 
         // setup the UI canvas renderer
         const dimensions = this.getWindowDimensions();
@@ -66,6 +68,7 @@ class View extends React.Component<Props, {}> {
         this.props.startAnimation({
             dimensions: dimensions,
             stage: this.stage,
+            scene: this.scene,
             UIrenderer: this.UIrenderer,
             renderer: this.renderer
         });

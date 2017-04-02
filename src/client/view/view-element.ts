@@ -1,11 +1,11 @@
 import * as PIXI from 'pixi.js';
+import * as THREE from 'three';
 
 import { Action, Dispatch, Drawable, DynamicDrawable } from '../../action';
 import { StoreRecords } from '../state/reducers';
 
 export abstract class ViewElement {
-    stage = new PIXI.Container();
-    maxBounds: PIXI.Rectangle; // IMPORTANT! this must represent the maximum bounds that stage can ever take on
+    object = new THREE.Object3D();
 
     protected actionQueue: Action<any>[] = [];
 
