@@ -98,7 +98,7 @@ export class ViewElementGrid {
         const newBins = this.getContainingBins(position);
         newBins.forEach((bin) => {
             (this.bins.get(bin) as Set<number>).forEach((id) => {
-                const e = this.elements.get(id) as ViewElement;
+                const e = this.elements.get(id)!;
                 if (this.isElementVisible(e) && !e.stage.visible) {
                     e.stage.visible = true;
                     this.visibleElements.add(id);
@@ -109,7 +109,7 @@ export class ViewElementGrid {
         this.visibleBins.forEach((bin) => {
             if (!newBins.has(bin)) {
                 (this.bins.get(bin) as Set<number>).forEach((id) => {
-                    const e = this.elements.get(id) as ViewElement;
+                    const e = this.elements.get(id)!;
                     if (!this.isElementVisible(e)) {
                         e.stage.visible = false;
                         this.visibleElements.delete(id);

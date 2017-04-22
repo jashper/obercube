@@ -18,7 +18,7 @@ export class OutpostElement extends ViewElement {
     private unitLabel: PIXI.Sprite;
     static unitLabelStyle = new PIXI.TextStyle({
         fontFamily: 'Arial',
-        fontSize: 14,
+        fontSize: 14 * 4, // multiplied by 4 to maintain a higher resolution when scaling
         fill: '#ffffff'
     });
 
@@ -108,8 +108,9 @@ export class OutpostElement extends ViewElement {
 
     private addUnitLabel(count: number) {
         this.unitLabel = new PIXI.Sprite(UnitCountTextures[count]);
-        this.unitLabel.x += 20;
+        this.unitLabel.x += Constants.OUTPOST_RADIUS;
         this.unitLabel.anchor.set(0.5);
+        this.unitLabel.scale.set(0.25, 0.25);
 
         this.prevUnitCount = count;
         this.stage.addChild(this.unitLabel);

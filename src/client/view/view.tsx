@@ -48,7 +48,7 @@ class View extends React.Component<Props, {}> {
             antialias: true,
             autoResize: true,
             backgroundColor: Constants.BACKGROUND_COLOR,
-            resolution: window.devicePixelRatio
+            resolution: window.devicePixelRatio || 1
         });
 
         // start the main render loop
