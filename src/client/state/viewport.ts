@@ -1,4 +1,4 @@
-import { TypedRecord, makeTypedFactory } from 'typed-immutable-record';
+import { makeTypedFactory, TypedRecord } from 'typed-immutable-record';
 
 import { Action, Dimensions } from '../../action';
 import { WindowActionType } from '../actions/window';

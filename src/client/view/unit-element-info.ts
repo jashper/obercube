@@ -1,4 +1,4 @@
-import { Coordinates, Unit, Outpost } from '../../action';
+import { Coordinates, Outpost, Unit } from '../../action';
 import Constants from '../../constants';
 import { GameStateRecord } from '../state/game';
 
@@ -15,10 +15,10 @@ export interface SubmarineInfo {
     rotation: number;
 }
 
-export class UnitElementInfo {
-    static speed = 1.25; // distance / tick
+export const UnitElementInfo = {
+    speed: 1.25, // distance / tick
 
-    static GET_END_TICK(drawable: Unit, game: GameStateRecord, startTick: number): number {
+    GET_END_TICK: (drawable: Unit, game: GameStateRecord, startTick: number): number => {
         const src = game.outposts.get(drawable.src as number);
         const dst = game.outposts.get(drawable.dst as number);
 
@@ -30,9 +30,9 @@ export class UnitElementInfo {
             Math.pow((subInfo.src.y - subInfo.dst.y), 2)
         );
         return Math.ceil(startTick + (distance / UnitElementInfo.speed) + 1);
-    }
+    },
 
-    static GET_LINE_INFO(src: Outpost, dst: Outpost): LineInfo {
+    GET_LINE_INFO: (src: Outpost, dst: Outpost): LineInfo => {
         const r = Constants.OUTPOST_RADIUS;
 
         let theta = Math.atan2(dst.y - src.y, dst.x - src.x);
@@ -54,9 +54,9 @@ export class UnitElementInfo {
         };
 
         return { theta, src: srcLine, dst: dstLine, stage };
-    }
+    },
 
-    static GET_SUBMARINE_INFO(lineInfo: LineInfo): SubmarineInfo {
+    GET_SUBMARINE_INFO: (lineInfo: LineInfo): SubmarineInfo => {
         const src = {
             x: lineInfo.src.x - lineInfo.stage.x - 6 * Math.sin(lineInfo.theta),
             y: lineInfo.src.y - lineInfo.stage.y + 6 * Math.cos(lineInfo.theta)
@@ -71,4 +71,4 @@ export class UnitElementInfo {
 
         return { src, dst, rotation };
     }
-}
+};

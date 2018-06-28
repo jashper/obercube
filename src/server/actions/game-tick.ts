@@ -1,11 +1,11 @@
 import { Action } from '../../action';
 import { GameTickEvent } from '../../game-tick-engine';
 
-export const GameTickActionType = {
-    START_TICK: 'START_TICK',
-    SYNCHRONIZE_TICK: 'SYNCHRONIZE_TICK',
-    QUEUE_EVENT: 'QUEUE_EVENT'
-};
+export enum GameTickActionType {
+    START_TICK = 'START_TICK',
+    SYNCHRONIZE_TICK = 'SYNCHRONIZE_TICK',
+    QUEUE_EVENT = 'QUEUE_EVENT'
+}
 
 export const GameTickAction = {
     start: (tick: number): Action<number> => {

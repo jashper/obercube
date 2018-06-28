@@ -1,8 +1,9 @@
 import * as PIXI from 'pixi.js';
+import { Dispatch } from 'redux';
 
-import { Dispatch, Unit } from '../../action';
+import { Unit } from '../../action';
 import Constants from '../../constants';
-import { StoreRecords } from '../state/reducers';
+import { ClientStore } from '../state/reducers';
 import { LineInfo, SubmarineInfo, UnitElementInfo } from './unit-element-info';
 import { ViewElement } from './view-element';
 
@@ -16,9 +17,10 @@ export class UnitElement extends ViewElement {
 
     private submarine: PIXI.Sprite;
 
-    constructor(readonly drawable: () => Unit,
-                readonly state: () => StoreRecords,
-                readonly dispatch: Dispatch
+    constructor(
+        readonly drawable: () => Unit,
+        readonly state: () => ClientStore,
+        readonly dispatch: Dispatch
     ) {
         super(drawable, state, dispatch);
 

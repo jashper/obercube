@@ -1,9 +1,9 @@
 import { Action, Unit } from '../../action';
 import IdGenerator from '../../id-generator';
 
-export const SpawnActionType = {
-    SPAWN_UNIT: 'SPAWN_UNIT'
-};
+export enum SpawnActionType {
+    SPAWN_UNIT = 'SPAWN_UNIT'
+}
 
 export const SpawnAction = {
     unit: (info: Unit): Action<Unit> => {

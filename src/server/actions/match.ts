@@ -11,11 +11,11 @@ export interface MatchSetup {
     outposts: Outpost[];
 }
 
-export const MatchActionType = {
-    GAME_STATE: 'GAME_STATE',
-    NEW_MATCH: 'NEW_MATCH',
-    NEW_PLAYER: 'NEW_PLAYER'
-};
+export enum MatchActionType {
+    GAME_STATE = 'GAME_STATE',
+    NEW_MATCH = 'NEW_MATCH',
+    NEW_PLAYER = 'NEW_PLAYER'
+}
 
 export const MatchAction = {
     newMatch: (match: MatchSetup): Action<MatchSetup> => {

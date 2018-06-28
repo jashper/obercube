@@ -1,11 +1,11 @@
-import { Action, Dimensions, RendererInfo, Delta } from '../../action';
+import { Action, Delta, Dimensions, RendererInfo } from '../../action';
 
-export const WindowActionType = {
-    WINDOW_RESIZE: 'WINDOW_RESIZE',
-    WINDOW_START_ANIMATION: 'WINDOW_START_ANIMATION',
-    WINDOW_START_PAN: 'WINDOW_START_PAN',
-    WINDOW_END_PAN: 'WINDOW_END_PAN'
-};
+export enum WindowActionType {
+    WINDOW_RESIZE = 'WINDOW_RESIZE',
+    WINDOW_START_ANIMATION = 'WINDOW_START_ANIMATION',
+    WINDOW_START_PAN = 'WINDOW_START_PAN',
+    WINDOW_END_PAN = 'WINDOW_END_PAN'
+}
 
 export const WindowAction = {
     resize: (dimensions: Dimensions): Action<Dimensions> => {

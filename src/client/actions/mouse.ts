@@ -1,9 +1,9 @@
 import { Action, Coordinates } from '../../action';
 
-export const MouseActionType = {
-    MOUSE_CLICK: 'MOUSE_CLICK',
-    MOUSE_WHEEL: 'MOUSE_WHEEL'
-};
+export enum MouseActionType {
+    MOUSE_CLICK = 'MOUSE_CLICK',
+    MOUSE_WHEEL = 'MOUSE_WHEEL'
+}
 
 export const MouseAction = {
     click: (point: Coordinates): Action<Coordinates> => {

@@ -1,15 +1,15 @@
 import { EventEmitter } from 'events';
-import { applyMiddleware, createStore } from 'redux';
-import { Server as WebSocketServer, IServerOptions } from 'uws';
+import { applyMiddleware, createStore, Store } from 'redux';
+import { IServerOptions, Server as WebSocketServer } from 'uws';
 import * as logger from 'winston';
 
 import { Action, Outpost } from '../action';
-import { Client } from './client';
+import IdGenerator from '../id-generator';
 import { MatchAction } from './actions/match';
 import { UserAction } from './actions/user';
+import { Client } from './client';
 import { matchController } from './middleware/match-controller';
-import { reducers, StoreRecords, ServerStore } from './state/reducers';
-import IdGenerator from '../id-generator';
+import { reducers, ServerStore } from './state/reducers';
 
 export interface ServerConfig {
     host?: string;
@@ -20,7 +20,7 @@ let clientId = 0;
 export const clients = new Map<number, Client>();
 
 export class Server extends EventEmitter {
-    private store: ServerStore;
+    private store: Store<ServerStore>;
 
     private wssOptions: IServerOptions;
     private wss: WebSocketServer;
@@ -39,7 +39,7 @@ export class Server extends EventEmitter {
 
         const middleware = applyMiddleware(matchController);
 
-        this.store = createStore<StoreRecords>(reducers, middleware) as ServerStore;
+        this.store = createStore<ServerStore, Action<any>, {}, {}>(reducers, middleware);
         this.initMatch();
 
         // TODO: look into enabling + configuring wss://
@@ -65,7 +65,7 @@ export class Server extends EventEmitter {
         });
 
         this.wss.on('error', (error) => {
-            logger.error('WebSocketServer: ' + error);
+            logger.error(`WebSocketServer: ${error}`);
             this.stop();
         });
 
@@ -105,7 +105,7 @@ export class Server extends EventEmitter {
         const client = new Client(id, socket);
 
         clients.set(id, client);
-        logger.info('Adding client for id ' + id);
+        logger.info(`Adding client for id ${id}`);
 
         client.src.subscribe({
             next: (a: Action<any>) => {
@@ -128,7 +128,7 @@ export class Server extends EventEmitter {
 
     private removeClient(client: Client) {
         clients.delete(client.id);
-        logger.info('Removing client for id ' + client.id);
+        logger.info(`Removing client for id ${client.id}`);
 
         // logout
         const user = this.store.getState().user.active.get(client.id);

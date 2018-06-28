@@ -1,19 +1,19 @@
-import { createStore, combineReducers, Store } from 'redux';
-import { Subject } from 'rxjs/Subject';
+import { combineReducers, createStore, Middleware, Store } from 'redux';
+import { Subject } from 'rxjs';
 import * as logger from 'winston';
 
-import { Action, Middleware, Player, Unit } from '../../action';
-import Constants from '../../constants';
-import { GameTickEngine } from '../../game-tick-engine';
-import { clients } from '../server';
-import { game, GameStateRecord } from '../../client/state/game';
-import { MatchAction, MatchActionType, MatchSetup } from '../actions/match';
-import { GameTickAction, GameTickActionType } from '../actions/game-tick';
-import { GenerateAction, GenerateActionType } from '../actions/generate';
-import { UserActionType, JoinMatchInfo } from '../actions/user';
+import { Action, Player, Unit } from '../../action';
 import { DestroyAction } from '../../client/actions/destroy';
 import { SpawnActionType } from '../../client/actions/spawn';
+import { game, GameStateRecord } from '../../client/state/game';
 import { UnitElementInfo } from '../../client/view/unit-element-info';
+import Constants from '../../constants';
+import { GameTickEngine } from '../../game-tick-engine';
+import { GameTickAction, GameTickActionType } from '../actions/game-tick';
+import { GenerateAction, GenerateActionType } from '../actions/generate';
+import { MatchAction, MatchActionType, MatchSetup } from '../actions/match';
+import { JoinMatchInfo, UserActionType } from '../actions/user';
+import { clients } from '../server';
 import { ServerStore } from '../state/reducers';
 
 interface GameRecord { game: GameStateRecord; }
@@ -35,7 +35,7 @@ const publishActions: Object = {
 
 let playerId = 0; // TODO: <--- remove
 
-export const matchController: Middleware<ServerStore> = store => next => action => {
+export const matchController: Middleware<{}, ServerStore> = store => next => action => {
     logger.info(action.type); // TODO: <--- remove
     const result = next(action);
 
@@ -43,7 +43,7 @@ export const matchController: Middleware<ServerStore> = store => next => action 
         case MatchActionType.NEW_MATCH:
         {
             const matchId = (action.payload as MatchSetup).id;
-            const gameStore = createStore<GameRecord>(combineReducers<GameRecord>({ game }));
+            const gameStore = createStore<GameRecord, Action<any>, {}, {}>(combineReducers<GameRecord>({ game }));
 
             gameStore.dispatch(action);
 
@@ -51,7 +51,7 @@ export const matchController: Middleware<ServerStore> = store => next => action 
             const engine = new GameTickEngine();
             engine.start(0, Constants.GAME_TICK_DELTA - 1);
 
-            const publisher = new Subject();
+            const publisher = new Subject<Action<any>>();
             engine.src.subscribe(a => {
                 if (publishActions.hasOwnProperty(a.type)) {
                     publisher.next(a);

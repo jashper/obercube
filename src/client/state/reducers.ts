@@ -1,19 +1,17 @@
-import { combineReducers, Store } from 'redux';
+import { combineReducers } from 'redux';
 
 import { game, GameStateRecord } from './game';
-import { viewport, ViewportStateRecord } from './viewport';
 import { socket, SocketStateRecord } from './socket';
+import { viewport, ViewportStateRecord } from './viewport';
 
-export const reducers = combineReducers<StoreRecords>({
+export const reducers = combineReducers<ClientStore>({
     game,
     socket,
     viewport
 });
 
-export interface StoreRecords {
+export interface ClientStore {
     game: GameStateRecord;
     socket: SocketStateRecord;
     viewport: ViewportStateRecord;
 }
-
-export interface ClientStore extends Store<StoreRecords> {}

@@ -18,17 +18,8 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.jsx?$/,
-                loader: 'babel-loader',
-                include: `${__dirname}/src`,
-            },
-            {
                 test: /\.tsx?$/,
-                loader: 'awesome-typescript-loader',
-                include: `${__dirname}/src`,
-                query: {
-                    tsconfig: './tsconfig.json'
-                }
+                loader: 'awesome-typescript-loader'
             }
         ]
     },

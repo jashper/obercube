@@ -1,17 +1,13 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import { bindActionCreators, Dispatch } from 'redux';
 
-import { StoreRecords } from '../state/reducers';
-import { Action, Dispatch } from '../../action';
+import { Action } from '../../action';
 import { SocketAction } from '../actions/socket';
+import { ClientStore } from '../state/reducers';
 
-interface StateProps {}
-
-interface DispatchProps {
-    open(socket: WebSocket): void;
-    dispatch: Dispatch;
-}
+interface StateProps extends ReturnType<typeof mapStateToProps> {}
+interface DispatchProps extends ReturnType<typeof mapDispatchToProps> {}
 
 interface Props extends StateProps, DispatchProps {}
 
@@ -35,15 +31,20 @@ class WebSocketHandler extends React.Component<Props, {}> {
     }
 }
 
-function mapStateToProps(state: StoreRecords) {
+function mapStateToProps(state: ClientStore) {
     return {};
 }
 
 function mapDispatchToProps(dispatch: Dispatch) {
     return {
-        open: bindActionCreators(SocketAction.open, dispatch),
-        dispatch
+        dispatch,
+        ...bindActionCreators(
+            {
+                open: SocketAction.open
+            },
+            dispatch
+        )
     };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(WebSocketHandler as any);
+export default connect(mapStateToProps, mapDispatchToProps)(WebSocketHandler);

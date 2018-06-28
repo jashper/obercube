@@ -1,10 +1,10 @@
 import { Action, User } from '../../action';
 
-export const UserActionType = {
-    USER_LOGIN: 'USER_LOGIN',
-    USER_LOGOUT: 'USER_LOGOUT',
-    JOIN_MATCH: 'JOIN_MATCH'
-};
+export enum UserActionType {
+    USER_LOGIN = 'USER_LOGIN',
+    USER_LOGOUT = 'USER_LOGOUT',
+    JOIN_MATCH = 'JOIN_MATCH'
+}
 
 export interface JoinMatchInfo {
     userId: number;

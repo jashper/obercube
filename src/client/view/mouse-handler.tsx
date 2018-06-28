@@ -1,48 +1,39 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import { bindActionCreators, Dispatch } from 'redux';
 
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/fromEvent';
-import 'rxjs/add/operator/debounceTime';
+import { fromEvent } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 
+import { Delta } from '../../action';
 import Constants from '../../constants';
-import { StoreRecords } from '../state/reducers';
-import { Coordinates, Dispatch, Delta } from '../../action';
-import { ViewportStateRecord } from '../state/viewport';
 import { MouseAction } from '../actions/mouse';
 import { WindowAction } from '../actions/window';
+import { ClientStore } from '../state/reducers';
 
-interface StateProps {
-    viewport: ViewportStateRecord;
-}
-
-interface DispatchProps {
-    mouseClick(point: Coordinates): void;
-    mouseWheel(ev: WheelEvent): void;
-    startPan(delta: Delta): void;
-    endPan(): void;
-}
+interface StateProps extends ReturnType<typeof mapStateToProps> {}
+interface DispatchProps extends ReturnType<typeof mapDispatchToProps> {}
 
 interface Props extends StateProps, DispatchProps {}
 
 class MouseHandler extends React.Component<Props, {}> {
-    isPanning = false;
-    panDelta: Delta = { dx: 0, dy: 0 };
+    private isPanning: Boolean = false;
+    private panDelta: Delta = { dx: 0, dy: 0 };
 
     componentDidMount() {
-        Observable.fromEvent(window, 'click')
+        fromEvent(window, 'click')
             .subscribe({
                 next: (ev: MouseEvent) => this.onClick(ev)
             });
 
-        Observable.fromEvent(window, 'wheel')
-            .debounceTime(10)
-            .subscribe({
+        fromEvent(window, 'wheel')
+            .pipe(
+                debounceTime(10)
+            ).subscribe({
                 next: (ev: WheelEvent) => this.onWheel(ev)
             });
 
-        Observable.fromEvent(window, 'mousemove')
+        fromEvent(window, 'mousemove')
             .subscribe({
                 next: (ev: MouseEvent) => this.onMouseMove(ev)
             });
@@ -97,19 +88,22 @@ class MouseHandler extends React.Component<Props, {}> {
     }
 }
 
-function mapStateToProps(state: StoreRecords) {
+function mapStateToProps(state: ClientStore) {
     return {
         viewport: state.viewport
     };
 }
 
 function mapDispatchToProps(dispatch: Dispatch) {
-    return {
-        mouseClick: bindActionCreators(MouseAction.click, dispatch),
-        mouseWheel: bindActionCreators(MouseAction.wheel, dispatch),
-        startPan: bindActionCreators(WindowAction.startPan, dispatch),
-        endPan: bindActionCreators(WindowAction.endPan, dispatch)
-    };
+    return bindActionCreators(
+        {
+            mouseClick: MouseAction.click,
+            mouseWheel: MouseAction.wheel,
+            startPan: WindowAction.startPan,
+            endPan: WindowAction.endPan
+        },
+        dispatch
+    );
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(MouseHandler as any);
+export default connect(mapStateToProps, mapDispatchToProps)(MouseHandler);

@@ -7,10 +7,6 @@ export interface Action<P> {
     fromServer?: boolean;
 }
 
-export type Dispatch = (action: Action<any>) => Action<any>;
-
-export type Middleware<Store> = (store: Store) => (next: Dispatch) => Dispatch;
-
 export interface Coordinates {
     x: number;
     y: number;

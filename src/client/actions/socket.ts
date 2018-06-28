@@ -1,8 +1,8 @@
 import { Action } from '../../action';
 
-export const SocketActionType = {
-    SOCKET_OPEN: 'SOCKET_OPEN'
-};
+export enum SocketActionType {
+    SOCKET_OPEN = 'SOCKET_OPEN'
+}
 
 export const SocketAction = {
     open: (socket: WebSocket): Action<WebSocket> => {

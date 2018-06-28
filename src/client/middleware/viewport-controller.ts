@@ -1,23 +1,24 @@
 import * as PIXI from 'pixi.js';
-import { Subscription } from 'rxjs/Subscription';
+import { Middleware } from 'redux';
+import { Subscription } from 'rxjs';
 
-import { Coordinates, Delta, Dimensions, Middleware, RendererInfo } from '../../action';
-import { DestroyAction, DestroyActionType } from '../actions/destroy';
-import { MatchActionType } from '../../server/actions/match';
+import { Coordinates, Delta, Dimensions, RendererInfo } from '../../action';
+import Constants from '../../constants';
 import { GameTickEngine, GameTickEvent } from '../../game-tick-engine';
+import IdGenerator from '../../id-generator';
 import { GameTickActionType } from '../../server/actions/game-tick';
+import { MatchActionType } from '../../server/actions/match';
+import { DestroyAction, DestroyActionType } from '../actions/destroy';
 import { MouseActionType } from '../actions/mouse';
 import { SpawnActionType } from '../actions/spawn';
 import { WindowActionType } from '../actions/window';
-import { ClientStore, StoreRecords } from '../state/reducers';
-import { ViewElementGrid } from '../view/view-element-grid';
+import { ClientStore } from '../state/reducers';
 import { OutpostElement } from '../view/outpost-element';
 import { UnitElement } from '../view/unit-element';
-import Constants from '../../constants';
-import IdGenerator from '../../id-generator';
+import { ViewElementGrid } from '../view/view-element-grid';
 
-let storeState: StoreRecords;
-function getState(): StoreRecords {
+let storeState: ClientStore;
+function getState(): ClientStore {
     return storeState;
 }
 
@@ -46,7 +47,7 @@ let panDelta: Delta;
 
 // keeps a reference to the entire store so that ViewElements can have
 // access to the most recent state in their animate() cycle
-export const viewportController: Middleware<ClientStore> = store => next => action => {
+export const viewportController: Middleware<{}, ClientStore> = store => next => action => {
     const result = next(action);
 
     const state = store.getState();

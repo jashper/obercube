@@ -1,8 +1,8 @@
 import { Map } from 'immutable';
-import { TypedRecord, makeTypedFactory } from 'typed-immutable-record';
+import { makeTypedFactory, TypedRecord } from 'typed-immutable-record';
 
 import { Action, User } from '../../action';
-import { UserActionType, JoinMatchInfo } from '../actions/user';
+import { JoinMatchInfo, UserActionType } from '../actions/user';
 
 interface UserState {
     active: Map<number, User>;

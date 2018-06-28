@@ -1,7 +1,8 @@
 import * as PIXI from 'pixi.js';
+import { Dispatch } from 'redux';
 
-import { Action, Dispatch, Drawable, DynamicDrawable } from '../../action';
-import { StoreRecords } from '../state/reducers';
+import { Action, Drawable, DynamicDrawable } from '../../action';
+import { ClientStore } from '../state/reducers';
 
 export abstract class ViewElement {
     stage = new PIXI.Container();
@@ -12,9 +13,10 @@ export abstract class ViewElement {
     private prevTick = 0;
     private delta = 0;
 
-    constructor(readonly drawable: () => Drawable,
-                readonly state: () => StoreRecords,
-                readonly dispatch: Dispatch
+    constructor(
+        readonly drawable: () => Drawable,
+        readonly state: () => ClientStore,
+        readonly dispatch: Dispatch
     ) {
         // keep track of the drawable just in case it's destroyed in the global state
         let prevDrawable: Drawable;

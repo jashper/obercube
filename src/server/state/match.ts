@@ -1,9 +1,9 @@
 import { Map } from 'immutable';
-import { TypedRecord, makeTypedFactory } from 'typed-immutable-record';
+import { makeTypedFactory, TypedRecord } from 'typed-immutable-record';
 
 import { Action, User } from '../../action';
 import { MatchActionType, MatchSetup } from '../actions/match';
-import { UserActionType, JoinMatchInfo } from '../actions/user';
+import { JoinMatchInfo, UserActionType } from '../actions/user';
 
 export interface Match {
     id: number;

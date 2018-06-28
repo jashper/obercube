@@ -1,11 +1,13 @@
-import { Action, Middleware } from '../../action';
+import { Middleware } from 'redux';
+
+import { Action } from '../../action';
 import { SocketActionType } from '../actions/socket';
 import { SpawnActionType } from '../actions/spawn';
 import { ClientStore } from '../state/reducers';
 
 let socket: WebSocket;
 
-export const webSocketController: Middleware<ClientStore> = store => next => action => {
+export const webSocketController: Middleware<{}, ClientStore> = store => next => action => {
     const result = next(action);
 
     switch (action.type) {

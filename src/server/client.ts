@@ -1,8 +1,5 @@
+import { Observable, Subject, Subscriber, Subscription } from 'rxjs';
 import * as logger from 'winston';
-import { Observable } from 'rxjs/Observable';
-import { Subject } from 'rxjs/Subject';
-import { Subscriber } from 'rxjs/Subscriber';
-import { Subscription } from 'rxjs/Subscription';
 
 import { Action } from '../action';
 
@@ -24,7 +21,7 @@ export class Client {
         };
 
         socket.onerror = (ev: ErrorEvent) => {
-            logger.warn('Socket error ' + ev + ' for id ' + this.id);
+            logger.warn(`Socket error ${ev} for id ${this.id}`);
         };
 
         // TODO: ensure that onclose is additionally triggered after onerror;
@@ -45,7 +42,7 @@ export class Client {
         try {
             payload = JSON.stringify(action);
         } catch (e) {
-            logger.error('Failed to stringify action ' + action + ' to be sent to id ' + this.id + ': ' + e);
+            logger.error(`Failed to stringify action ${action} to be sent to id ${this.id}: ${e}`);
             return;
         }
 
@@ -60,7 +57,7 @@ export class Client {
     }
 
     disconnect(code?: number, reason?: string) {
-        logger.warn('Closing socket with code ' + code + ' and reason: ' + reason);
+        logger.warn(`Closing socket with code ${code} and reason: ${reason}`);
         this.socket.close(code, reason);
     }
 
@@ -69,7 +66,7 @@ export class Client {
         try {
             action = JSON.parse(message);
         } catch (e) {
-            logger.warn('Error parsing JSON message data from id ' + this.id + ' : ' + e);
+            logger.warn(`Error parsing JSON message data from id ${this.id} : ${e}`);
             this.disconnect();
             return;
         }

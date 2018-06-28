@@ -1,28 +1,20 @@
+import * as PIXI from 'pixi.js';
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
-import * as PIXI from 'pixi.js';
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/fromEvent';
-import 'rxjs/add/operator/debounceTime';
+import { bindActionCreators, Dispatch } from 'redux';
+import { fromEvent } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 
-import { StoreRecords } from '../state/reducers';
-import { Dispatch, Dimensions, RendererInfo} from '../../action';
-import { GameStateRecord } from '../state/game';
+import { Dimensions} from '../../action';
 import { WindowAction } from '../actions/window';
+import { ClientStore } from '../state/reducers';
 
 import Constants from '../../constants';
 import MouseHandler from './mouse-handler';
 import WebSocketHandler from './web-socket-handler';
 
-interface StateProps {
-    game: GameStateRecord;
-}
-
-interface DispatchProps {
-    windowResize(dimensions: Dimensions): void;
-    startAnimation(info: RendererInfo): void;
-}
+interface StateProps extends ReturnType<typeof mapStateToProps> {}
+interface DispatchProps extends ReturnType<typeof mapDispatchToProps> {}
 
 interface Props extends StateProps, DispatchProps {}
 
@@ -78,9 +70,10 @@ class View extends React.Component<Props, {}> {
 
     // TODO: intercept browser zooms, and trigger a MOUSE_WHEEL event instead
     private onWindowResize() {
-        Observable.fromEvent(window, 'resize')
-            .debounceTime(75)
-            .subscribe({
+        fromEvent(window, 'resize')
+            .pipe(
+                debounceTime(75)
+            ).subscribe({
                 next: () => {
                     const dimensions = this.getWindowDimensions();
                     this.props.windowResize(dimensions);
@@ -90,17 +83,20 @@ class View extends React.Component<Props, {}> {
     }
 }
 
-function mapStateToProps(state: StoreRecords) {
+function mapStateToProps(state: ClientStore) {
     return {
         game: state.game
     };
 }
 
 function mapDispatchToProps(dispatch: Dispatch) {
-    return {
-        windowResize: bindActionCreators(WindowAction.resize, dispatch),
-        startAnimation: bindActionCreators(WindowAction.startAnimation, dispatch)
-    };
+    return bindActionCreators(
+        {
+            windowResize: WindowAction.resize,
+            startAnimation: WindowAction.startAnimation
+        },
+        dispatch
+    );
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(View as any);
+export default connect(mapStateToProps, mapDispatchToProps)(View);

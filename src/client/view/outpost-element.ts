@@ -1,9 +1,10 @@
 import * as PIXI from 'pixi.js';
+import { Dispatch } from 'redux';
 
-import { Dispatch, Outpost } from '../../action';
+import { Outpost } from '../../action';
 import Constants from '../../constants';
 import { SpawnAction } from '../actions/spawn';
-import { StoreRecords } from '../state/reducers';
+import { ClientStore } from '../state/reducers';
 import { ViewElement } from './view-element';
 
 const OutpostTextures: {[key: number]: PIXI.Texture} = {};
@@ -22,9 +23,10 @@ export class OutpostElement extends ViewElement {
         fill: '#ffffff'
     });
 
-    constructor(readonly drawable: () => Outpost,
-                readonly state: () => StoreRecords,
-                readonly dispatch: Dispatch
+    constructor(
+        readonly drawable: () => Outpost,
+        readonly state: () => ClientStore,
+        readonly dispatch: Dispatch
     ) {
         super(drawable, state, dispatch);
 

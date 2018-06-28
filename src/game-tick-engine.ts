@@ -1,8 +1,5 @@
 import * as FastPriorityQueue from 'fastpriorityqueue';
-import 'rxjs/add/observable/timer';
-import { Observable } from 'rxjs/Observable';
-import { Subject } from 'rxjs/Subject';
-import { Subscription } from 'rxjs/Subscription';
+import { Observable, Subject, Subscription, timer } from 'rxjs';
 
 import { Action } from './action';
 
@@ -31,7 +28,7 @@ export class GameTickEngine {
         this.prevTick = tick;
 
         if (period) {
-            this.timer = Observable.timer(0, period).subscribe(() => this.increment());
+            this.timer = timer(0, period).subscribe(() => this.increment());
         }
     }
 

@@ -1,4 +1,4 @@
-import { TypedRecord, makeTypedFactory } from 'typed-immutable-record';
+import { makeTypedFactory, TypedRecord } from 'typed-immutable-record';
 
 import { Action } from '../../action';
 import { SocketActionType } from '../actions/socket';

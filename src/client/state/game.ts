@@ -1,15 +1,15 @@
-import { OrderedMap, Map } from 'immutable';
-import { TypedRecord, makeTypedFactory } from 'typed-immutable-record';
+import { Map, OrderedMap } from 'immutable';
+import { makeTypedFactory, TypedRecord } from 'typed-immutable-record';
 
 // TODO: make a typying file for this library
 import * as transit from 'transit-immutable-js';
 const fromJSON: (json: any) => any = transit.fromJSON;
 
-import { Action, MapInfo, Outpost, Unit, Player } from '../../action';
-import { DestroyActionType } from '../actions/destroy';
-import { SpawnActionType } from '../actions/spawn';
+import { Action, MapInfo, Outpost, Player, Unit } from '../../action';
 import { GenerateActionType } from '../../server/actions/generate';
 import { MatchActionType, MatchSetup } from '../../server/actions/match';
+import { DestroyActionType } from '../actions/destroy';
+import { SpawnActionType } from '../actions/spawn';
 
 interface GameState {
     matchId: number;
@@ -62,19 +62,19 @@ export function game(state: GameStateRecord = defaultGameState(), action: Action
         case MatchActionType.NEW_MATCH: // for initializing server-based stores of game state
             const match = action.payload as MatchSetup;
 
-            let game = defaultGameState();
-            game = game.merge({
+            state = defaultGameState();
+            state = state.merge({
                 matchId: match.id,
                 mapInfo: match.mapInfo
             });
 
             (match.outposts as Outpost[]).forEach((o) => {
-                game = game.merge({
-                    outposts: game.outposts.set(o.id, o)
+                state = state.merge({
+                    outposts: state.outposts.set(o.id, o)
                 });
             });
 
-            return game;
+            return state;
         case MatchActionType.GAME_STATE:
             const record = fromJSON(action.payload);
             return makeTypedFactory<GameState, GameStateRecord>({
