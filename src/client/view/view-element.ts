@@ -40,7 +40,7 @@ export abstract class ViewElement {
         const d = this.drawable() as DynamicDrawable;
 
         // allows for continuous motion (i.e. ignore the tick engine when it's slightly out of sync with the server)
-        if (Math.abs(tick - this.prevTick) <= 2) {
+        if (Math.abs(tick - this.prevTick) <= 30) {
             this.delta++;
         } else {
             this.delta = tick - d.startTick;

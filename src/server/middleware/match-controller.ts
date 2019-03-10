@@ -49,7 +49,7 @@ export const matchController: Middleware<{}, ServerStore> = store => next => act
 
             // the server needs to run slightly faster for the client to not be too far ahead
             const engine = new GameTickEngine();
-            engine.start(0, Constants.GAME_TICK_DELTA - 1);
+            engine.start(0, Constants.GAME_TICK_DELTA - 2);
 
             const publisher = new Subject<Action<any>>();
             engine.src.subscribe(a => {
@@ -63,7 +63,7 @@ export const matchController: Middleware<{}, ServerStore> = store => next => act
             // queue up periodic events to be sent to all clients
             engine.queueEvent({
                 trigger: engine.tick,
-                interval: Constants.DeltaToTicks(1000), // ~ every 1 sec
+                interval: Constants.DeltaToTicks(5000), // ~ every 5 sec
                 action: (tick: number) => GameTickAction.synchronize(tick)
             });
 
@@ -100,7 +100,7 @@ export const matchController: Middleware<{}, ServerStore> = store => next => act
             // send game state to the new player
             const client = clients.get(userId)!;
             const gameState = match.store.getState().game;
-            client.send(GameTickAction.start(match.engine.tick + 10)); // TODO: remove this constant
+            client.send(GameTickAction.start(match.engine.tick + 10)); // TODO: better sync this to account for latency
             client.send(MatchAction.state(player.id, gameState));
 
             // subscribe the new player to all future game actions

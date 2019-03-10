@@ -37,13 +37,14 @@ export class OutpostElement extends ViewElement {
         this.stage.y = d.y;
 
         const color = Constants.COLOR_MAP.get(d.playerId)!;
+
         this.outpost = new PIXI.Sprite(OutpostTextures[color]);
         this.outpost.x += r;
         this.outpost.y += r + Constants.OUTPOST_TEXT_BUFFER;
         this.outpost.pivot.set(r, r);
         this.outpost.cacheAsBitmap = true;
-        this.stage.addChild(this.outpost);
 
+        this.stage.addChild(this.outpost);
         this.addUnitLabel(d.unitCount);
 
         this.maxBounds = this.stage.getLocalBounds();
